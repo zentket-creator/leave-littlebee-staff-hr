@@ -521,8 +521,7 @@ tbody td{padding:12px 16px;vertical-align:middle;}
   </div>
   <div class="d-body" id="d-body"></div>
 </div>
-<script>(function(){var t=localStorage.getItem('pbn_hr_unlocked');if(t&&(Date.now()-parseInt(t,10)<18000000)){document.getElementById('hr-view').style.display='';document.getElementById('req-view').style.display='none';}})();</script><script>
-const ANNUAL_LIMIT=12;
+<script>(function(){var t=sessionStorage.getItem('pbn_hr_unlocked');if(t&&(Date.now()-parseInt(t,10)<18000000)){document.getElementById('hr-view').style.display='';document.getElementById('req-view').style.display='none';}})();</script>const ANNUAL_LIMIT=12;
 const STORAGE_KEY='pbn_leave_v2';
 const REQ_KEY='pbn_leave_requests_v1';
 const MIGRATE_KEY='pbn_seed_migrated_v2';
@@ -1590,7 +1589,7 @@ async function unlockHR(){
   const pin=prompt('รหัสผ่านสำหรับ HR:');
   if(pin===null)return;
   if(pin!==HR_PIN){alert('รหัสไม่ถูกต้อง');return;}
-localStorage.setItem('pbn_hr_unlocked',String(Date.now()));
+sessionStorage.setItem('pbn_hr_unlocked',String(Date.now()));
   document.getElementById('req-view').style.display='none';
   document.getElementById('hr-view').style.display='';
   await initHRView();
@@ -1619,8 +1618,7 @@ async function initHRView(){
 }
 async function boot(){
   await refreshFromStorage();
-const hrTs=localStorage.getItem('pbn_hr_unlocked');if(hrTs&&(Date.now()-parseInt(hrTs,10)<18000000)){document.getElementById('req-view').style.display='none';document.getElementById('hr-view').style.display='';await initHRView();return;}else{localStorage.removeItem('pbn_hr_unlocked');}  // ลิงก์หลักที่ publish ออกมาจะเป็นหน้าขอลาของพนักงานเสมอ (ปลอดภัยสำหรับส่งให้ทุกคน)
-  // HR กดลิงก์ "สำหรับ HR" ด้านล่างฟอร์ม แล้วใส่รหัสผ่านเพื่อสลับเป็นแดชบอร์ด
+const hrTs=sessionStorage.getItem('pbn_hr_unlocked');if(hrTs&&(Date.now()-parseInt(hrTs,10)<18000000)){document.getElementById('req-view').style.display='none';document.getElementById('hr-view').style.display='';await initHRView();return;}else{sessionStorage.removeItem('pbn_hr_unlocked');}  // HR กดลิงก์ "สำหรับ HR" ด้านล่างฟอร์ม แล้วใส่รหัสผ่านเพื่อสลับเป็นแดชบอร์ด
   document.getElementById('hr-view').style.display='none';
   document.getElementById('req-view').style.display='block';
   let backendOk=false;
