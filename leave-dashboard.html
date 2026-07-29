@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>วันลาพนักงาน · ผึ้งน้อย</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- SheetJS for Excel parsing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --honey:#F5A623;--honey-lt:#FFF8EC;--honey-dk:#C07D0A;
+  --blue:#2563EB;--blue-lt:#EFF6FF;
+  --teal:#0D9488;--teal-lt:#F0FDFA;
+  --red:#DC2626;--red-lt:#FEF2F2;
+  --amber:#D97706;--amber-lt:#FFFBEB;
+  --green:#16A34A;--green-lt:#F0FDF4;
+  --purple:#7C3AED;--purple-lt:#F5F3FF;
+  --pink:#DB2777;--pink-lt:#FDF2F8;
+  --ink:#111827;--ink2:#374151;--ink3:#6B7280;--ink4:#9CA3AF;
+  --border:#E5E7EB;--bg:#F9FAFB;--surface:#FFFFFF;
+  --radius:10px;--radius-sm:6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:14px;-webkit-font-smoothing:antialiased;}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;}
+
+/* HEADER */
+header{background:var(--ink);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;}
+.h-logo{display:flex;align-items:center;gap:10px;}
+.h-bee{height:30px;width:auto;display:block;}
+.h-title{color:#fff;font-size:15px;font-weight:600;}
+.h-sub{color:var(--ink3);font-size:11px;font-family:'IBM Plex Mono',monospace;margin-top:1px;}
+.h-year{color:var(--honey);font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;}
+.h-req-btn{position:relative;background:#1F2937;color:#fff;border:1px solid #374151;border-radius:20px;padding:6px 14px;font-size:12px;font-family:'Sarabun',sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;}
+.h-req-btn:hover{background:#374151;}
+.h-req-btn span{background:var(--red);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;padding:1px 7px;border-radius:20px;min-width:18px;text-align:center;}
+.h-req-btn.zero span{background:#4B5563;}
+
+/* REQUEST PAGE (employee-facing, ?request=1) */
+.req-page{max-width:460px;margin:0 auto;padding:40px 20px 60px;}
+.req-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px 24px;}
+.req-logo{display:block;height:46px;width:auto;margin:0 auto 8px;}
+.req-title{text-align:center;font-size:17px;font-weight:600;color:var(--ink);margin-bottom:2px;}
+.req-sub{text-align:center;font-size:12px;color:var(--ink3);margin-bottom:22px;}
+.req-success{text-align:center;padding:30px 10px;}
+.req-success .ic{font-size:44px;margin-bottom:10px;}
+.req-success .msg{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+.req-success .sub{font-size:12.5px;color:var(--ink3);}
+
+/* REQUESTS APPROVAL MODAL */
+.req-row{border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px;}
+.req-row-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;}
+.req-row-name{font-size:14px;font-weight:600;color:var(--ink);}
+.req-row-meta{font-size:11.5px;color:var(--ink3);margin-top:2px;}
+.req-row-note{font-size:12px;color:var(--ink2);background:var(--bg);border-radius:var(--radius-sm);padding:6px 10px;margin-bottom:8px;}
+.req-row-actions{display:flex;gap:8px;}
+.req-btn{flex:1;border:none;border-radius:var(--radius-sm);padding:7px 0;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Sarabun',sans-serif;}
+.req-btn-ok{background:var(--green-lt);color:var(--green);}.req-btn-ok:hover{background:#DCFCE7;}
+.req-btn-no{background:var(--red-lt);color:var(--red);}.req-btn-no:hover{background:#FEE2E2;}
+.emp-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;margin-bottom:8px;}
+.emp-row-name{font-size:13.5px;font-weight:600;color:var(--ink);}
+.emp-row-meta{font-size:11px;color:var(--ink3);margin-top:1px;}
+.emp-row-rm{background:var(--red-lt);color:var(--red);border:none;border-radius:var(--radius-sm);padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Sarabun',sans-serif;flex-shrink:0;}
+.emp-row-rm:hover{background:#FEE2E2;}
+.emp-row-edit{background:var(--blue-lt);color:var(--blue);border:none;border-radius:var(--radius-sm);padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Sarabun',sans-serif;flex-shrink:0;}
+.emp-row-edit:hover{background:#DBEAFE;}
+
+
+/* PAGE TABS */
+.page-tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;}
+.page-tab{background:none;border:none;border-bottom:2px solid transparent;padding:14px 20px;font-size:14px;font-family:'Sarabun',sans-serif;color:var(--ink3);cursor:pointer;font-weight:500;transition:color .15s;display:flex;align-items:center;gap:6px;}
+.page-tab .dot{width:8px;height:8px;border-radius:50%;}
+.page-tab.active.blue{border-bottom-color:var(--blue);color:var(--blue);}
+.page-tab.active.teal{border-bottom-color:var(--teal);color:var(--teal);}
+
+/* MAIN */
+main{max-width:1080px;margin:0 auto;padding:24px 24px 60px;}
+
+/* CARDS */
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;}
+.scard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;}
+.scard.hi{border-top:3px solid var(--honey);}
+.scard-label{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
+.scard-val{font-size:26px;font-weight:600;font-family:'IBM Plex Mono',monospace;line-height:1;color:var(--ink);}
+.scard-val.c-blue{color:var(--blue);}.scard-val.c-teal{color:var(--teal);}.scard-val.c-red{color:var(--red);}
+.scard-sub{font-size:11px;color:var(--ink4);margin-top:4px;}
+
+/* STATUS BAR (overview) */
+.status-bar-card{grid-column:1/-1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;}
+.status-bar-title{font-size:12px;color:var(--ink3);margin-bottom:14px;font-weight:600;}
+.status-bar-track{display:flex;height:26px;border-radius:6px;overflow:hidden;background:var(--bg);margin-bottom:14px;border:1px solid var(--border);}
+.status-seg{height:100%;transition:opacity .15s;position:relative;}
+.status-seg:not(:last-child){border-right:2px solid var(--surface);}
+.status-legend{display:flex;flex-wrap:wrap;gap:10px 22px;}
+.status-legend-item{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink2);}
+.status-legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.status-legend-item b{font-family:'IBM Plex Mono',monospace;color:var(--ink);font-weight:600;}
+.status-legend-item span.pct{color:var(--ink4);font-size:11px;}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;}
+.filter-tabs{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:2px;gap:2px;}
+.ft{background:none;border:none;padding:5px 12px;border-radius:4px;font-size:12px;font-family:'Sarabun',sans-serif;color:var(--ink3);cursor:pointer;white-space:nowrap;transition:background .12s,color .12s;}
+.ft.active{background:var(--surface);color:var(--ink);font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.ft.active.danger{color:var(--red);}
+select,.search-input{height:34px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--ink);padding:0 10px;font-size:13px;font-family:'Sarabun',sans-serif;outline:none;}
+select:focus,.search-input:focus{border-color:var(--blue);}
+.spacer{flex:1;}
+.btn{display:flex;align-items:center;gap:6px;border:none;border-radius:var(--radius-sm);padding:0 14px;height:34px;font-size:13px;font-family:'Sarabun',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s;}
+.btn-dark{background:var(--ink);color:#fff;}.btn-dark:hover{background:#374151;}
+.btn-outline{background:var(--surface);color:var(--ink2);border:1px solid var(--border);}.btn-outline:hover{background:var(--bg);}
+.btn-purple{background:var(--purple);color:#fff;}.btn-purple:hover{background:#6D28D9;}
+.btn-pink{background:var(--pink);color:#fff;}.btn-pink:hover{background:#BE185D;}
+.btn svg{width:14px;height:14px;flex-shrink:0;}
+
+/* TABLE */
+.table-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#FAFAFA;}
+tbody td{padding:12px 16px;vertical-align:middle;}
+.quota-wrap{display:flex;align-items:center;gap:8px;}
+.quota-track{flex:1;min-width:60px;max-width:100px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.quota-fill{height:5px;border-radius:3px;transition:width .4s;}
+.quota-remain{font-size:10px;color:var(--ink4);font-family:'IBM Plex Mono',monospace;}
+.visa-dots{display:flex;gap:3px;flex-wrap:wrap;max-width:80px;}
+.visa-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);opacity:.8;}
+.pill{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;letter-spacing:.03em;}
+.p-ok{background:var(--blue-lt);color:var(--blue);}
+.p-warn{background:var(--red-lt);color:var(--red);}
+.p-amber{background:var(--amber-lt);color:var(--amber);}
+.p-muted{background:var(--bg);color:var(--ink4);border:1px solid var(--border);}
+.p-dept{background:var(--bg);color:var(--ink3);border:1px solid var(--border);font-size:10px;padding:1px 7px;border-radius:4px;}
+.p-future{background:var(--purple-lt);color:var(--purple);font-size:9px;padding:1px 7px;margin-left:4px;}
+.name-cell{font-weight:500;}.num-cell{font-size:11px;color:var(--ink4);font-family:'IBM Plex Mono',monospace;}
+.muted{color:var(--ink4);font-size:12px;}
+
+/* MODAL BASE */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;backdrop-filter:blur(2px);align-items:flex-start;justify-content:center;padding-top:60px;overflow-y:auto;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border-radius:var(--radius);width:480px;max-width:94vw;box-shadow:0 20px 60px rgba(0,0,0,.2);margin-bottom:40px;}
+.modal-header{padding:20px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:16px;font-weight:600;color:var(--ink);}
+.modal-close{background:var(--bg);border:1px solid var(--border);color:var(--ink3);width:28px;height:28px;border-radius:50%;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.modal-close:hover{background:var(--border);}
+.modal-body{padding:20px 22px;}
+.modal-footer{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+.form-row{margin-bottom:16px;}
+.form-label{display:block;font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:6px;}
+.form-label span{color:var(--red);}
+.form-control{width:100%;height:38px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--ink);padding:0 12px;font-size:13px;font-family:'Sarabun',sans-serif;outline:none;transition:border-color .15s;}
+.form-control:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.form-type-row{display:flex;gap:8px;margin-bottom:16px;}
+.type-btn{flex:1;border:1.5px solid var(--border);background:var(--surface);border-radius:var(--radius-sm);padding:10px 8px;cursor:pointer;text-align:center;transition:all .15s;font-family:'Sarabun',sans-serif;}
+.type-btn .tb-icon{font-size:20px;margin-bottom:4px;}
+.type-btn .tb-label{font-size:12px;font-weight:500;color:var(--ink3);}
+.type-btn.active{border-color:var(--blue);background:var(--blue-lt);}
+.type-btn.active .tb-label{color:var(--blue);}
+.type-btn.active-teal{border-color:var(--teal);background:var(--teal-lt);}
+.type-btn.active-teal .tb-label{color:var(--teal);}
+.type-btn.active-pink{border-color:var(--pink);background:var(--pink-lt);}
+.type-btn.active-pink .tb-label{color:var(--pink);}
+.page-tab.active.pink{border-bottom-color:var(--pink);color:var(--pink);}
+.calc-preview{background:var(--blue-lt);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:13px;color:var(--blue);font-weight:500;display:none;}
+.calc-preview.teal{background:var(--teal-lt);color:var(--teal);}
+.calc-preview.pink{background:var(--pink-lt);color:var(--pink);}
+.err-msg{font-size:12px;color:var(--red);margin-top:5px;display:none;}
+.form-note{font-size:11px;color:var(--ink4);margin-top:6px;margin-bottom:16px;}
+
+/* IMPORT MODAL */
+/* drop zone */
+.drop-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:32px 20px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;margin-bottom:16px;}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--purple);background:var(--purple-lt);}
+.drop-zone input[type=file]{display:none;}
+.drop-icon{font-size:36px;margin-bottom:10px;}
+.drop-title{font-size:14px;font-weight:600;color:var(--ink2);margin-bottom:4px;}
+.drop-sub{font-size:12px;color:var(--ink3);}
+.drop-types{display:flex;gap:6px;justify-content:center;margin-top:10px;}
+.drop-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;letter-spacing:.04em;}
+.badge-xlsx{background:#E8F5E9;color:#2E7D32;}
+.badge-csv{background:#E3F2FD;color:#1565C0;}
+
+/* template download */
+.template-row{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;}
+.template-info{font-size:12px;}
+.template-title{font-weight:600;color:var(--ink2);margin-bottom:2px;}
+.template-sub{color:var(--ink3);}
+.btn-dl{display:flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--border);color:var(--ink2);border-radius:var(--radius-sm);padding:6px 12px;font-size:12px;font-family:'Sarabun',sans-serif;cursor:pointer;white-space:nowrap;}
+.btn-dl:hover{background:var(--bg);}
+
+/* preview table in import */
+.import-preview{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:16px;max-height:260px;overflow-y:auto;}
+.import-preview table{width:100%;border-collapse:collapse;font-size:12px;}
+.import-preview thead th{background:var(--bg);padding:7px 10px;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);white-space:nowrap;position:sticky;top:0;}
+.import-preview tbody tr{border-bottom:1px solid var(--border);}
+.import-preview tbody tr:last-child{border-bottom:none;}
+.import-preview tbody td{padding:7px 10px;color:var(--ink2);vertical-align:middle;}
+.row-ok{background:var(--green-lt);}
+.row-err{background:var(--red-lt);}
+.tag-ok{color:var(--green);font-size:10px;font-weight:600;}
+.tag-err{color:var(--red);font-size:10px;font-weight:600;}
+.import-summary{font-size:13px;color:var(--ink2);margin-bottom:12px;}
+.import-summary b{color:var(--ink);}
+.import-summary .c-red{color:var(--red);}
+.import-summary .c-green{color:var(--green);}
+
+/* DRAWER */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;backdrop-filter:blur(1px);}
+.overlay.open{display:block;}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:420px;max-width:96vw;background:var(--surface);z-index:201;overflow-y:auto;transform:translateX(105%);transition:transform .22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;}
+.drawer.open{transform:translateX(0);}
+.dh{padding:20px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.dh-name{font-size:20px;font-weight:600;}.dh-dept{font-size:11px;color:var(--ink3);margin-top:4px;font-family:'IBM Plex Mono',monospace;}
+.dh-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-top:2px;}
+.dh-add-btn{background:var(--ink);color:#fff;border:none;border-radius:var(--radius-sm);padding:0 12px;height:28px;font-size:12px;font-family:'Sarabun',sans-serif;cursor:pointer;}
+.dh-add-btn:hover{background:#374151;}
+.dh-close{background:var(--bg);border:1px solid var(--border);color:var(--ink3);width:28px;height:28px;border-radius:50%;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.dh-close:hover{background:var(--border);}
+.d-tabs{display:flex;border-bottom:1px solid var(--border);}
+.d-tab{flex:1;background:none;border:none;border-bottom:2px solid transparent;padding:12px;font-size:13px;font-family:'Sarabun',sans-serif;color:var(--ink3);cursor:pointer;font-weight:500;}
+.d-tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.d-tab.active.teal-tab{color:var(--teal);border-bottom-color:var(--teal);}
+.d-tab.active.pink-tab{color:var(--pink);border-bottom-color:var(--pink);}
+.d-body{padding:20px 22px;flex:1;}
+.quota-hero{display:flex;align-items:center;gap:20px;margin-bottom:20px;padding:18px;background:var(--blue-lt);border-radius:var(--radius);}
+.quota-ring{position:relative;width:72px;height:72px;flex-shrink:0;}
+.quota-ring svg{width:72px;height:72px;transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:#DBEAFE;stroke-width:6;}
+.ring-fill{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .6s ease;}
+.ring-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ring-big{font-size:18px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--blue);line-height:1;}
+.ring-sm{font-size:9px;color:var(--ink3);}
+.quota-info{flex:1;}
+.qi-label{font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;}
+.qi-remain{font-size:22px;font-weight:600;color:var(--ink);font-family:'IBM Plex Mono',monospace;}
+.qi-of{font-size:12px;color:var(--ink3);margin-top:2px;}
+.quota-hero.warn-hero{background:var(--red-lt);}
+.quota-hero.warn-hero .ring-big{color:var(--red);}
+.quota-hero.warn-hero .ring-bg{stroke:#FECACA;}
+.log-section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:10px;}
+.log-list{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:20px;}
+.log-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px;transition:background .1s;}
+.log-row:last-child{border-bottom:none;}
+.log-row:hover{background:var(--bg);}
+.log-row-left{flex:1;}
+.log-dates{font-size:13px;color:var(--ink2);}
+.log-source{font-size:10px;color:var(--ink4);margin-top:2px;}
+.log-row-right{display:flex;align-items:center;gap:6px;}
+.log-days-badge{font-size:11px;font-family:'IBM Plex Mono',monospace;font-weight:500;background:var(--blue-lt);color:var(--blue);padding:2px 8px;border-radius:20px;white-space:nowrap;}
+.log-del{background:none;border:none;color:var(--ink4);cursor:pointer;font-size:14px;padding:2px 4px;border-radius:4px;line-height:1;}
+.log-del:hover{color:var(--red);background:var(--red-lt);}
+.visa-hero{display:flex;align-items:center;gap:16px;margin-bottom:20px;padding:16px 18px;background:var(--teal-lt);border-radius:var(--radius);}
+.visa-big{font-size:36px;font-weight:700;color:var(--teal);font-family:'IBM Plex Mono',monospace;line-height:1;}
+.visa-label{font-size:12px;color:var(--ink3);margin-top:4px;}
+.visa-log-row{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--border);gap:10px;transition:background .1s;}
+.visa-log-row:last-child{border-bottom:none;}
+.visa-log-row:hover{background:var(--bg);}
+.visa-idx{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--ink4);min-width:18px;}
+.visa-dates{font-size:13px;color:var(--ink2);}
+.visa-days-badge{font-size:11px;font-family:'IBM Plex Mono',monospace;background:var(--teal-lt);color:var(--teal);padding:2px 8px;border-radius:20px;white-space:nowrap;}
+.empty-msg{text-align:center;padding:28px 0;color:var(--ink4);font-size:13px;}
+.empty-table{text-align:center;padding:48px;color:var(--ink4);font-size:13px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:10px 20px;border-radius:40px;font-size:13px;font-weight:500;z-index:400;transition:transform .3s,opacity .3s;opacity:0;pointer-events:none;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+
+@media(max-width:640px){
+  main{padding:16px 14px 48px;}
+  header,.page-tabs{padding:0 14px;}
+  .page-tab{padding:12px 12px;font-size:13px;}
+  .summary{grid-template-columns:repeat(2,1fr);}
+  .hide-sm{display:none;}
+  .toolbar{gap:6px;}
+  .form-row-2{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div id="hr-view">
+<header>
+  <div class="h-logo">
+    <img class="h-bee" src="data:image/png;base64,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" alt="Little Bee">
+    <div><div class="h-title">ขนมเบื้องหวานผึ้งน้อย</div><div class="h-sub">HR · ระบบวันลาพนักงาน</div></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px">
+    <button class="h-req-btn" id="emp-manage-btn" onclick="openManageEmpModal()">👥 พนักงาน</button>
+    <button class="h-req-btn" id="req-badge-btn" onclick="openRequestsModal()">🔔 คำขอลา <span id="req-badge-count">0</span></button>
+    <div class="h-year" id="h-year">2569</div>
+  </div>
+</header>
+
+<div class="page-tabs">
+  <button class="page-tab active blue" data-page="annual" onclick="setPage(this)"><span class="dot" style="background:var(--blue)"></span>วันลาพักร้อน</button>
+  <button class="page-tab pink" data-page="sick" onclick="setPage(this)"><span class="dot" style="background:var(--pink)"></span>ลาป่วย</button>
+  <button class="page-tab teal" data-page="visa" onclick="setPage(this)"><span class="dot" style="background:var(--teal)"></span>ต่อบัตร</button>
+</div>
+
+<main>
+  <div class="summary" id="summary"></div>
+  <div class="toolbar">
+    <div class="filter-tabs">
+      <button class="ft active" data-f="all" onclick="setFilter(this)">ทั้งหมด</button>
+      <button class="ft" data-f="used" onclick="setFilter(this)">มีการลา</button>
+      <button class="ft danger" data-f="over" onclick="setFilter(this)">เกินโควต้า</button>
+    </div>
+    <select id="dept-sel" onchange="render()">
+      <option value="">ทุกแผนก</option>
+      <option value="พนักงานสาขา">สาขา</option>
+      <option value="ฝ่ายผลิต">ฝ่ายผลิต</option>
+    </select>
+    <select id="year-sel" onchange="onYearChange()"></select>
+    <div class="spacer"></div>
+    <input class="search-input" type="text" id="search" placeholder="ค้นหาชื่อ..." oninput="render()">
+    <button class="btn btn-outline" onclick="exportToExcel()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5v9a1 1 0 001 1h10a1 1 0 001-1V5"/><polyline points="4 4 8 8 12 4"/><line x1="8" y1="1" x2="8" y2="8"/></svg>
+      ส่งออก Excel
+    </button>
+    <button class="btn btn-outline" onclick="openImportModal()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/><polyline points="4 6 8 2 12 6"/><line x1="8" y1="2" x2="8" y2="11"/></svg>
+      นำเข้าไฟล์
+    </button>
+    <button class="btn btn-dark" onclick="openAddModal()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="2" x2="8" y2="14"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+      บันทึกวันลา
+    </button>
+  </div>
+  <div class="table-card"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+</main>
+</div>
+
+<!-- ── EMPLOYEE REQUEST PAGE (?request=1) ── -->
+<div id="req-view" class="req-page" style="display:none">
+  <div id="storage-warn-banner" style="display:none;background:#FEF3C7;border:1px solid #FDE68A;color:#92400E;border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:14px;line-height:1.5">
+    ⚠️ ระบบตรวจไม่พบการเชื่อมต่อฐานข้อมูลกลาง คำขอลาที่ส่งอาจไม่ไปถึง HR — กรุณาแจ้งผู้ดูแลระบบให้ตรวจสอบการตั้งค่าฐานข้อมูล (Vercel KV) หรือแจ้ง HR ด้วยช่องทางอื่นแทนไปก่อน
+  </div>
+  <div class="req-card">
+    <div id="req-form-wrap">
+      <img class="req-logo" src="data:image/png;base64,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" alt="Little Bee">
+      <div class="req-title">ขอลา · ผึ้งน้อย</div>
+      <div class="req-sub">กรอกแบบฟอร์มนี้เพื่อส่งคำขอลาให้ HR อนุมัติ</div>
+      <div class="form-row">
+        <div class="form-label">ประเภทการลา<span>*</span></div>
+        <div class="form-type-row">
+          <div class="type-btn active" id="rq-tb-annual" onclick="rqSelectType('annual')"><div class="tb-icon">🌴</div><div class="tb-label">ลาพักร้อน</div></div>
+          <div class="type-btn" id="rq-tb-sick" onclick="rqSelectType('sick')"><div class="tb-icon">🤒</div><div class="tb-label">ลาป่วย</div></div>
+          <div class="type-btn" id="rq-tb-visa" onclick="rqSelectType('visa')"><div class="tb-icon">📋</div><div class="tb-label">ต่อบัตร</div></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="rq-emp">ชื่อพนักงาน<span>*</span></label>
+        <select class="form-control" id="rq-emp"><option value="">— เลือกพนักงาน —</option></select>
+        <div class="err-msg" id="rq-err-emp">กรุณาเลือกพนักงาน</div>
+      </div>
+      <div class="form-row-2">
+        <div><label class="form-label" for="rq-start">วันที่เริ่ม<span>*</span></label><input class="form-control" type="date" id="rq-start" min="2024-01-01" max="2035-12-31" oninput="rqUpdateCalc()"><div class="err-msg" id="rq-err-start">กรุณาระบุวันที่</div></div>
+        <div><label class="form-label" for="rq-end">วันที่สิ้นสุด<span>*</span></label><input class="form-control" type="date" id="rq-end" min="2024-01-01" max="2035-12-31" oninput="rqUpdateCalc()"><div class="err-msg" id="rq-err-end">วันสิ้นสุดไม่ถูกต้อง</div></div>
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="rq-note">หมายเหตุ (ถ้ามี)</label>
+        <input class="form-control" type="text" id="rq-note" placeholder="เช่น เหตุผลการลา">
+      </div>
+      <div class="calc-preview" id="rq-calc-preview"></div>
+      <button class="btn btn-dark" id="rq-submit-btn" style="width:100%;height:42px;justify-content:center;margin-top:6px" onclick="submitRequest()">ส่งคำขอลา</button>
+    </div>
+    <div id="req-success" style="display:none" class="req-success">
+      <div class="ic">✅</div>
+      <div class="msg">ส่งคำขอลาแล้ว</div>
+      <div class="sub">รอ HR ตรวจสอบและอนุมัติ ระบบจะอัปเดตวันลาให้อัตโนมัติเมื่ออนุมัติแล้ว</div>
+      <button class="btn btn-outline" style="margin-top:16px" onclick="rqReset()">ส่งคำขออีกรายการ</button>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:16px">
+    <a href="javascript:void(0)" onclick="unlockHR()" style="font-size:11.5px;color:var(--ink4);text-decoration:underline;cursor:pointer">สำหรับ HR · เข้าดูแดชบอร์ด</a>
+  </div>
+</div>
+
+
+<!-- ── ADD MODAL ── -->
+<div class="modal-bg" id="modal-add-bg" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="add-modal-title">บันทึกวันลา</div>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-label">ประเภทการลา<span>*</span></div>
+        <div class="form-type-row">
+          <div class="type-btn active" id="tb-annual" onclick="selectType('annual')"><div class="tb-icon">🌴</div><div class="tb-label">ลาพักร้อน</div></div>
+          <div class="type-btn" id="tb-sick" onclick="selectType('sick')"><div class="tb-icon">🤒</div><div class="tb-label">ลาป่วย</div></div>
+          <div class="type-btn" id="tb-visa" onclick="selectType('visa')"><div class="tb-icon">📋</div><div class="tb-label">ต่อบัตร</div></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="form-label" for="m-emp">พนักงาน<span>*</span></label>
+        <select class="form-control" id="m-emp" onchange="updateCalc()"><option value="">— เลือกพนักงาน —</option></select>
+        <div class="err-msg" id="err-emp">กรุณาเลือกพนักงาน</div>
+      </div>
+      <div class="form-row-2">
+        <div><label class="form-label" for="m-start">วันที่เริ่ม<span>*</span></label><input class="form-control" type="date" id="m-start" min="2024-01-01" max="2035-12-31" oninput="updateCalc()"><div class="err-msg" id="err-start">กรุณาระบุวันที่</div></div>
+        <div><label class="form-label" for="m-end">วันที่สิ้นสุด<span>*</span></label><input class="form-control" type="date" id="m-end" min="2024-01-01" max="2035-12-31" oninput="updateCalc()"><div class="err-msg" id="err-end">วันสิ้นสุดไม่ถูกต้อง</div></div>
+      </div>
+      <div class="form-note">💡 รองรับการบันทึกย้อนหลัง</div>
+      <div class="calc-preview" id="calc-preview"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAddModal()">ยกเลิก</button>
+      <button class="btn btn-dark" id="btn-save" onclick="saveLeave()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── IMPORT MODAL ── -->
+<div class="modal-bg" id="modal-import-bg" onclick="if(event.target===this)closeImportModal()">
+  <div class="modal" style="width:560px">
+    <div class="modal-header">
+      <div class="modal-title">นำเข้าวันลาจากไฟล์</div>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="modal-body" id="import-body">
+      <!-- state 1: upload -->
+      <div id="import-step-upload">
+        <div class="template-row">
+          <div class="template-info">
+            <div class="template-title">📄 ดาวน์โหลด Template</div>
+            <div class="template-sub">ไฟล์ตัวอย่างพร้อมรูปแบบที่ถูกต้อง</div>
+          </div>
+          <button class="btn-dl" onclick="downloadTemplate()">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2"/><polyline points="12 8 8 12 4 8"/><line x1="8" y1="2" x2="8" y2="12"/></svg>
+            ดาวน์โหลด .csv
+          </button>
+        </div>
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+          <input type="file" id="file-input" accept=".xlsx,.xls,.csv" onchange="handleFileSelect(event)">
+          <div class="drop-icon">📂</div>
+          <div class="drop-title">คลิกเพื่อเลือกไฟล์ หรือลากมาวางที่นี่</div>
+          <div class="drop-sub">รองรับ Excel และ CSV</div>
+          <div class="drop-types">
+            <span class="drop-badge badge-xlsx">XLSX</span>
+            <span class="drop-badge badge-xlsx">XLS</span>
+            <span class="drop-badge badge-csv">CSV</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--ink3);">
+          <b style="color:var(--ink2)">รูปแบบคอลัมน์ที่ต้องการ:</b><br>
+          <code style="font-family:'IBM Plex Mono',monospace;background:var(--bg);padding:2px 6px;border-radius:4px;font-size:11px">ชื่อ | ประเภท (ลาพักร้อน/ต่อบัตร) | วันที่เริ่ม (dd/mm/yyyy) | วันที่สิ้นสุด (dd/mm/yyyy)</code>
+        </div>
+      </div>
+      <!-- state 2: preview -->
+      <div id="import-step-preview" style="display:none">
+        <div class="import-summary" id="import-summary"></div>
+        <div class="import-preview" id="import-preview-table"></div>
+        <div style="font-size:11px;color:var(--ink3)">รายการที่มีข้อผิดพลาดจะถูกข้ามไป</div>
+      </div>
+    </div>
+    <div class="modal-footer" id="import-footer">
+      <button class="btn btn-outline" onclick="closeImportModal()">ยกเลิก</button>
+      <button class="btn btn-purple" id="btn-import" onclick="confirmImport()" style="display:none">นำเข้า <span id="import-count"></span> รายการ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── REQUESTS APPROVAL MODAL ── -->
+<div class="modal-bg" id="modal-requests-bg" onclick="if(event.target===this)closeRequestsModal()">
+  <div class="modal" style="width:520px">
+    <div class="modal-header">
+      <div class="modal-title">คำขอลารออนุมัติ</div>
+      <button class="modal-close" onclick="closeRequestsModal()">✕</button>
+    </div>
+    <div class="modal-body" id="requests-body" style="max-height:60vh;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- ── MANAGE EMPLOYEES MODAL ── -->
+<div class="modal-bg" id="modal-emp-bg" onclick="if(event.target===this)closeManageEmpModal()">
+  <div class="modal" style="width:520px">
+    <div class="modal-header">
+      <div class="modal-title">จัดการพนักงาน</div>
+      <button class="modal-close" onclick="closeManageEmpModal()">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:70vh;overflow-y:auto">
+      <div class="form-row">
+        <div class="form-label">เพิ่มพนักงานใหม่</div>
+        <div style="display:flex;gap:8px">
+          <input class="form-control" type="text" id="new-emp-name" placeholder="ชื่อพนักงาน" style="flex:1.4">
+          <select class="form-control" id="new-emp-dept" style="flex:1">
+            <option value="พนักงานสาขา">สาขา</option>
+            <option value="ฝ่ายผลิต">ฝ่ายผลิต</option>
+          </select>
+          <button class="btn btn-dark" style="flex-shrink:0" onclick="addEmployee()">+ เพิ่ม</button>
+        </div>
+        <div class="err-msg" id="new-emp-err">กรอกชื่อ หรือมีชื่อนี้อยู่แล้ว</div>
+      </div>
+      <div class="log-section-title" style="margin-top:18px">รายชื่อพนักงานทั้งหมด (<span id="emp-count">0</span> คน)</div>
+      <div id="emp-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- DRAWER -->
+<div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="dh">
+    <div><div class="dh-name" id="d-name"></div><div class="dh-dept" id="d-dept"></div></div>
+    <div class="dh-actions">
+      <button class="dh-add-btn" onclick="openAddModalForEmp()">+ เพิ่มการลา</button>
+      <button class="dh-close" onclick="closeDrawer()">✕</button>
+    </div>
+  </div>
+  <div class="d-tabs">
+    <button class="d-tab active" data-dt="annual" onclick="setDrawerTab(this)">วันลาพักร้อน</button>
+    <button class="d-tab pink-tab" data-dt="sick" onclick="setDrawerTab(this)">ลาป่วย</button>
+    <button class="d-tab teal-tab" data-dt="visa" onclick="setDrawerTab(this)">ต่อบัตร</button>
+  </div>
+  <div class="d-body" id="d-body"></div>
+</div>
+
+<script>
+const ANNUAL_LIMIT=12;
+const STORAGE_KEY='pbn_leave_v2';
+const REQ_KEY='pbn_leave_requests_v1';
+const MIGRATE_KEY='pbn_seed_migrated_v2';
+const ROSTER_KEY='pbn_roster_overrides_v1';
+let currentYear=new Date().getFullYear();
+
+/* ── SHARED STORAGE (syncs across everyone who opens this artifact link) ── */
+/* falls back to per-browser localStorage if window.storage isn't available (e.g. opened as a plain downloaded file) */
+async function storageGet(key){
+  try{
+    const r=await fetch(`/api/store?key=${encodeURIComponent(key)}`);
+    if(r.ok){ const j=await r.json(); return j.value; }
+  }catch(e){}
+  try{ if(window.storage){ const r=await window.storage.get(key,true); return r?r.value:null; } }catch(e){}
+  try{ return localStorage.getItem('shared_'+key); }catch(e){ return null; }
+}
+async function storageSet(key,value){
+  try{
+    const r=await fetch(`/api/store?key=${encodeURIComponent(key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({value})});
+    if(r.ok)return;
+  }catch(e){}
+  try{ if(window.storage){ await window.storage.set(key,value,true); return; } }catch(e){}
+  try{ localStorage.setItem('shared_'+key,value); }catch(e){}
+}
+
+const roster=[
+  {name:'จินดา',dept:'พนักงานสาขา'},{name:'เพชร2',dept:'พนักงานสาขา'},
+  {name:'แจว',dept:'พนักงานสาขา'},{name:'แพร',dept:'พนักงานสาขา'},
+  {name:'น้ำ',dept:'พนักงานสาขา'},{name:'เต้ย',dept:'พนักงานสาขา'},
+  {name:'วุ้น',dept:'พนักงานสาขา'},{name:'โตมด',dept:'พนักงานสาขา'},
+  {name:'เพชร',dept:'พนักงานสาขา'},{name:'หนึ่ง',dept:'พนักงานสาขา'},
+  {name:'แป้ง',dept:'พนักงานสาขา'},{name:'แต๋ม',dept:'พนักงานสาขา'},
+  {name:'น้อยน่า',dept:'พนักงานสาขา'},{name:'ลิลลี่',dept:'พนักงานสาขา'},
+  {name:'เปิ้ล',dept:'พนักงานสาขา'},{name:'มี่',dept:'พนักงานสาขา'},
+  {name:'เจ สัน',dept:'พนักงานสาขา'},{name:'สไบ',dept:'พนักงานสาขา'},
+  {name:'หม่อง',dept:'พนักงานสาขา'},{name:'พร',dept:'พนักงานสาขา'},
+  {name:'อ้อย',dept:'พนักงานสาขา'},{name:'เพชรตี้',dept:'พนักงานสาขา'},
+  {name:'ด้วง',dept:'พนักงานสาขา'},{name:'หมี',dept:'พนักงานสาขา'},
+  {name:'เดือน',dept:'พนักงานสาขา'},{name:'ตะวัน',dept:'พนักงานสาขา'},
+  {name:'ทอง',dept:'พนักงานสาขา'},{name:'ฝน',dept:'พนักงานสาขา'},
+  {name:'เอก',dept:'พนักงานสาขา'},{name:'สอน สอน',dept:'ฝ่ายผลิต'},
+  {name:'นัท',dept:'ฝ่ายผลิต'},{name:'โดม(ดอน)',dept:'ฝ่ายผลิต'},
+  {name:'เป็ก',dept:'ฝ่ายผลิต'},{name:'รัก',dept:'ฝ่ายผลิต'},
+  {name:'เข้ม',dept:'ฝ่ายผลิต'},
+];
+const rosterSet=new Set(roster.map(r=>r.name));
+
+// ── ROSTER OVERRIDES (เพิ่ม/ลบพนักงาน) — เก็บเป็น diff จาก roster ตั้งต้น sync ผ่าน shared storage ──
+let rosterOverride={added:[],removed:[]};
+let activeRoster=[...roster];
+let activeRosterSet=new Set(roster.map(r=>r.name));
+function recomputeRoster(){
+  activeRoster=[...roster.filter(r=>!rosterOverride.removed.includes(r.name)),...rosterOverride.added];
+  activeRosterSet=new Set(activeRoster.map(r=>r.name));
+}
+
+const nameMap={'น้อย':'น้อยน่า','เจ':'เจ สัน','แป้ง2':'แป้ง','สอน':'สอน สอน','นก':'จินดา',
+  'สใบ':'สไบ','ลล':'ลิลลี่',
+  'ตี้':null,'แหม่ม':null,'หลิว':null,'ดอกดู๋':null,'นาง':null,'ไม':null};
+function resolve(n){return (n in nameMap)?nameMap[n]:n;}
+
+/* ── DATE UTILS ── */
+function parseDate(str){
+  if(!str)return null;
+  str=String(str).trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(str)){const p=str.split('-');return new Date(+p[0],+p[1]-1,+p[2]);}
+  if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)){const p=str.split('/');return new Date(+p[2],+p[1]-1,+p[0]);}
+  // Excel serial date (number)
+  if(!isNaN(str)&&+str>40000){const d=new Date((+str-25569)*86400000);return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());}
+  return null;
+}
+function toSlash(str){
+  const d=parseDate(str);if(!d)return '';
+  const dd=String(d.getDate()).padStart(2,'0');
+  const mm=String(d.getMonth()+1).padStart(2,'0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+function isoToSlash(iso){if(!iso)return '';const p=iso.split('-');return `${p[2]}/${p[1]}/${p[0]}`;}
+function slashToIso(s){if(!s)return '';const p=s.split('/');return `${p[2]}-${p[1]}-${p[0]}`;}
+// อุปกรณ์/เบราว์เซอร์บางเครื่อง (มือถือปฏิทินพุทธศักราช) ส่งปีเป็น พ.ศ. แทน ค.ศ. มาใน input วันที่ — ฟังก์ชันนี้แปลงกลับให้ถูกต้องก่อนบันทึก
+function normalizeSlashYear(s){
+  if(!s)return s;
+  const p=s.split('/');
+  if(p.length!==3)return s;
+  let y=+p[2];
+  if(y>2400)y-=543;
+  return `${p[0]}/${p[1]}/${y}`;
+}
+function countDays(s,e){
+  const sd=parseDate(s),ed=parseDate(e);
+  if(!sd||!ed||ed<sd)return 0;
+  return Math.round((ed-sd)/86400000)+1;
+}
+function fmtDate(str){
+  const d=parseDate(str);if(!d)return str||'';
+  return d.toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
+}
+
+/* ── SEED DATA ── */
+const seedLeave=[
+  // ── มกราคม–กุมภาพันธ์ (จากไฟล์ Excel) ──
+  {name:'สไบ',   t:'annual',s:'01/01/2026',e:'02/01/2026'},  // 2 วัน
+  {name:'พร',    t:'annual',s:'01/01/2026',e:'02/01/2026'},  // 2 วัน
+  {name:'ด้วง',  t:'annual',s:'01/01/2026',e:'02/01/2026'},  // 2 วัน
+  {name:'แต๋ม',  t:'annual',s:'01/01/2026',e:'02/01/2026'},  // 2 วัน
+  {name:'จินดา', t:'annual',s:'01/01/2026',e:'02/01/2026'},  // 2 วัน
+  {name:'แพร',   t:'annual',s:'01/01/2026',e:'20/01/2026'},  // 20 วัน (จากไฟล์)
+  {name:'ลิลลี่',t:'annual',s:'05/01/2026',e:'07/01/2026'},  // 3 วัน
+  {name:'น้อย',  t:'annual',s:'09/02/2026',e:'10/02/2026'},  // 2 วัน
+  {name:'แป้ง2', t:'annual',s:'11/02/2026',e:'28/02/2026'},  // 18 วัน
+  {name:'เพชร2', t:'annual',s:'11/02/2026',e:'28/02/2026'},  // 18 วัน
+  // ── จากฟอร์มเดิม (มีนาคม เป็นต้นไป) ──
+  {name:'เปิ้ล',t:'annual',s:'15/03/2026',e:'20/03/2026'},
+  {name:'ฝน',t:'annual',s:'10/04/2026',e:'22/04/2026'},
+  {name:'ตะวัน',t:'annual',s:'10/04/2026',e:'22/04/2026'},
+  {name:'เพชร2',t:'annual',s:'13/04/2026',e:'16/04/2026'},
+  {name:'แป้ง2',t:'annual',s:'13/04/2026',e:'17/04/2026'},
+  {name:'ลิลลี่',t:'annual',s:'10/04/2026',e:'19/04/2026'},
+  {name:'แจว',t:'annual',s:'17/04/2026',e:'26/04/2026'},
+  {name:'เพชรตี้',t:'annual',s:'04/05/2026',e:'12/05/2026'},
+  {name:'น้อย',t:'annual',s:'06/07/2026',e:'07/07/2026'},
+  {name:'เพชร2',t:'annual',s:'03/06/2026',e:'08/06/2026'},
+  {name:'สอน',t:'annual',s:'10/08/2026',e:'25/08/2026'},
+  {name:'ลิลลี่',t:'annual',s:'16/07/2026',e:'18/07/2026'},
+  {name:'เพชร',t:'annual',s:'01/07/2026',e:'31/07/2026'},
+  // ── จากไฟล์ Excel (รายการที่ไม่ซ้ำกับฟอร์มเดิม) ──
+  {name:'เจ',t:'annual',s:'01/03/2026',e:'14/03/2026'},        // 14 วัน
+  {name:'น้อย',t:'annual',s:'02/03/2026',e:'08/03/2026'},      // 7 วัน
+  {name:'มี่',t:'annual',s:'01/04/2026',e:'03/04/2026'},        // 3 วัน
+  {name:'หม่อง',t:'annual',s:'01/04/2026',e:'02/04/2026'},      // 2 วัน
+  {name:'แจว',t:'annual',s:'02/04/2026',e:'12/04/2026'},        // 11 วัน
+  {name:'เพชร',t:'annual',s:'02/04/2026',e:'19/04/2026'},       // 18 วัน
+  {name:'ด้วง',t:'annual',s:'06/04/2026',e:'22/04/2026'},       // 17 วัน
+  {name:'พร',t:'annual',s:'06/04/2026',e:'22/04/2026'},         // 17 วัน
+  {name:'แต๋ม',t:'annual',s:'06/04/2026',e:'22/04/2026'},       // 17 วัน
+  {name:'แป้ง2',t:'annual',s:'27/04/2026',e:'30/04/2026'},      // 4 วัน
+  {name:'อ้อย',t:'annual',s:'01/05/2026',e:'10/05/2026'},       // 10 วัน
+  {name:'น้อย',t:'annual',s:'04/05/2026',e:'05/05/2026'},       // 2 วัน
+  {name:'แพร',t:'annual',s:'06/05/2026',e:'06/05/2026'},        // 1 วัน
+  {name:'โตมด',t:'annual',s:'06/05/2026',e:'06/05/2026'},       // 1 วัน
+  {name:'หม่อง',t:'annual',s:'15/05/2026',e:'15/05/2026'},      // 1 วัน
+  {name:'มี่',t:'annual',s:'18/05/2026',e:'18/05/2026'},        // 1 วัน
+  {name:'ตะวัน',t:'annual',s:'19/05/2026',e:'31/05/2026'},      // 13 วัน
+  {name:'มี่',t:'annual',s:'01/06/2026',e:'01/06/2026'},        // 1 วัน
+  {name:'ลิลลี่',t:'annual',s:'01/06/2026',e:'01/06/2026'},     // 1 วัน
+  {name:'หนึ่ง',t:'annual',s:'08/06/2026',e:'15/06/2026'},      // 8 วัน
+  {name:'เพชร2',t:'annual',s:'03/07/2026',e:'08/07/2026'},      // 6 วัน
+  {name:'โตมด',t:'annual',s:'08/07/2026',e:'08/07/2026'},       // 1 วัน
+  {name:'แต๋ม',t:'visa',vs:'06/01/2026',ve:'07/01/2026'},
+  {name:'เจ',t:'visa',vs:'20/02/2026',ve:'21/02/2026'},
+  {name:'นก',t:'visa',vs:'18/02/2026',ve:'19/02/2026'},
+  {name:'สอน',t:'visa',vs:'18/02/2026',ve:'19/02/2026'},
+  {name:'เอก',t:'visa',vs:'26/02/2026',ve:'27/02/2026'},
+  {name:'แพร',t:'visa',vs:'17/03/2026',ve:'18/03/2026'},
+  {name:'โตมด',t:'visa',vs:'17/03/2026',ve:'18/03/2026'},
+  {name:'แจว',t:'visa',vs:'06/04/2026',ve:'07/04/2026'},
+  {name:'ฝน',t:'visa',vs:'16/02/2026',ve:'17/02/2026'},
+  {name:'เพชร',t:'visa',vs:'03/04/2026',ve:'04/04/2026'},
+  {name:'หม่อง',t:'visa',vs:'30/03/2026',ve:'31/03/2026'},
+  {name:'วุ้น',t:'visa',vs:'30/03/2026',ve:'31/03/2026'},
+  {name:'ตะวัน',t:'visa',vs:'08/03/2026',ve:'09/03/2026'},
+  {name:'หมี',t:'visa',vs:'19/03/2026',ve:'20/03/2026'},
+  {name:'อ้อย',t:'visa',vs:'18/03/2026',ve:'19/03/2026'},
+  {name:'แจว',t:'visa',vs:'02/04/2026',ve:'03/04/2026'},
+  {name:'เอก',t:'visa',vs:'26/04/2026',ve:'27/04/2026'},
+  {name:'น้อย',t:'visa',vs:'04/05/2026',ve:'04/05/2026'},
+  {name:'เจ',t:'visa',vs:'10/05/2026',ve:'11/05/2026'},
+  {name:'โตมด',t:'visa',vs:'15/05/2026',ve:'16/05/2026'},
+  {name:'วุ้น',t:'visa',vs:'16/05/2026',ve:'17/05/2026'},
+  {name:'หมี',t:'visa',vs:'16/05/2026',ve:'17/05/2026'},
+  {name:'หม่อง',t:'visa',vs:'16/05/2026',ve:'17/05/2026'},
+  {name:'เพชร',t:'visa',vs:'14/06/2026',ve:'15/06/2026'},
+  {name:'แจว',t:'visa',vs:'09/06/2026',ve:'10/06/2026'},
+  {name:'เอก',t:'visa',vs:'24/06/2026',ve:'25/06/2026'},
+  {name:'โตมด',t:'visa',vs:'24/06/2026',ve:'25/06/2026'},
+  {name:'แป้ง2',t:'visa',vs:'28/06/2026',ve:'29/06/2026'},
+  {name:'เพชร',t:'visa',vs:'12/08/2026',ve:'13/08/2026'},
+  {name:'โตมด',t:'visa',vs:'06/07/2026',ve:'07/07/2026'},
+  {name:'ลิลลี่',t:'visa',vs:'01/06/2026',ve:'01/05/2026'},
+];
+
+let extraCache=[];
+let pendingCache=[];
+let migrationDone=false;
+function loadExtra(){return extraCache;}
+async function saveExtra(arr){extraCache=arr;await storageSet(STORAGE_KEY,JSON.stringify(arr));}
+function getPending(){return pendingCache;}
+async function savePending(arr){pendingCache=arr;await storageSet(REQ_KEY,JSON.stringify(arr));}
+async function refreshFromStorage(){
+  try{extraCache=JSON.parse(await storageGet(STORAGE_KEY)||'[]');}catch{extraCache=[];}
+  try{pendingCache=JSON.parse(await storageGet(REQ_KEY)||'[]');}catch{pendingCache=[];}
+  try{migrationDone=(await storageGet(MIGRATE_KEY))==='1';}catch{migrationDone=false;}
+  try{rosterOverride=JSON.parse(await storageGet(ROSTER_KEY)||'{"added":[],"removed":[]}');}catch{rosterOverride={added:[],removed:[]};}
+  recomputeRoster();
+  await repairCorruptedYears();
+}
+// ซ่อมรายการที่เคยถูกบันทึกปีเพี้ยนเป็น พ.ศ. (เช่น 2569 แทน 2026) ให้กลับมาเป็น ค.ศ. ที่ถูกต้อง ทำอัตโนมัติทุกครั้งที่โหลดข้อมูล
+async function repairCorruptedYears(){
+  let changed=false;
+  const extra=loadExtra();
+  extra.forEach(x=>{
+    if(x.t==='visa'){
+      const nvs=normalizeSlashYear(x.vs),nve=normalizeSlashYear(x.ve);
+      if(nvs!==x.vs){x.vs=nvs;changed=true;}
+      if(nve!==x.ve){x.ve=nve;changed=true;}
+    } else {
+      const ns=normalizeSlashYear(x.s),ne=normalizeSlashYear(x.e);
+      if(ns!==x.s){x.s=ns;changed=true;}
+      if(ne!==x.e){x.e=ne;changed=true;}
+    }
+  });
+  if(changed)await saveExtra(extra);
+}
+// ย้ายข้อมูลวันลาตั้งต้น (seedLeave) เข้าไปเป็นรายการที่แก้ไข/ลบได้จริงในระบบ ทำครั้งเดียวเท่านั้น
+async function ensureMigrated(){
+  if(migrationDone)return;
+  const migrated=seedLeave.map((r,i)=>({...r,id:'seed_'+i,source:r.source||'ข้อมูลเดิม'}));
+  const merged=[...migrated,...loadExtra()];
+  await saveExtra(merged);
+  await storageSet(MIGRATE_KEY,'1');
+  migrationDone=true;
+}
+
+function buildData(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const lmap={};
+  activeRoster.forEach(r=>{lmap[r.name]={annual:[],visa:[],sick:[]};});
+  const allSource=migrationDone?loadExtra():[...seedLeave,...loadExtra()];
+  const source=allSource.filter(r=>{
+    const ds=r.t==='visa'?r.vs:r.s;
+    const d=parseDate(ds);
+    return d&&d.getFullYear()===currentYear;
+  });
+  source.forEach(r=>{
+    const res=resolve(r.name);
+    if(res===null||!activeRosterSet.has(res))return;
+    if(r.t==='annual'||r.t==='sick'){
+      const d=countDays(r.s,r.e);
+      if(d>0){
+        const sd=parseDate(r.s),ed=parseDate(r.e);
+        let counted;
+        if(ed<=today)counted=d;               // ลาที่ผ่านไปแล้วทั้งหมด
+        else if(sd>today)counted=0;            // ลาล่วงหน้าทั้งช่วง ยังไม่นับ
+        else counted=Math.round((today-sd)/86400000)+1; // ลาที่กำลังเกิดขึ้น นับถึงวันนี้
+        const future=d-counted;
+        lmap[res][r.t].push({start:r.s,end:r.e,days:d,counted,future,isFuture:sd>today,id:r.id||null,source:r.source||'ฟอร์ม'});
+      }
+    } else {
+      lmap[res].visa.push({start:r.vs,end:r.ve,id:r.id||null,source:r.source||'ฟอร์ม'});
+    }
+  });
+  return activeRoster.map(r=>{
+    const lv=lmap[r.name];
+    const annualDays=lv.annual.reduce((s,x)=>s+x.counted,0);        // นับถึงวันนี้ (ใช้คำนวณโควต้า)
+    const futureDays=lv.annual.reduce((s,x)=>s+x.future,0);         // วันลาล่วงหน้าที่ยังไม่ถึง
+    const hasFuture=futureDays>0;
+    const sickDays=lv.sick.reduce((s,x)=>s+x.counted,0);
+    const sickFutureDays=lv.sick.reduce((s,x)=>s+x.future,0);
+    const sickHasFuture=sickFutureDays>0;
+    lv.annual.sort((a,b)=>b.start.localeCompare(a.start));
+    lv.visa.sort((a,b)=>b.start.localeCompare(a.start));
+    lv.sick.sort((a,b)=>b.start.localeCompare(a.start));
+    return {...r,annualDays,futureDays,hasFuture,sickDays,sickFutureDays,sickHasFuture,visaCount:lv.visa.length,annualLog:lv.annual,visaLog:lv.visa,sickLog:lv.sick};
+  });
+}
+
+let data=buildData();
+let currentPage='annual',currentFilter='all';
+let drawerEmp=null,drawerTab='annual';
+let modalType='annual';
+let importRows=[];
+
+/* ── TEMPLATE DOWNLOAD ── */
+function downloadTemplate(){
+  const rows=[
+    ['ชื่อ','ประเภท','วันที่เริ่ม','วันที่สิ้นสุด'],
+    ['แจว','ลาพักร้อน','01/01/2026','05/01/2026'],
+    ['แพร','ต่อบัตร','15/02/2026','16/02/2026'],
+  ];
+  const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const bom='\uFEFF';
+  const blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='leave_template.csv';a.click();
+}
+
+/* ── IMPORT MODAL ── */
+function openImportModal(){
+  importRows=[];
+  document.getElementById('import-step-upload').style.display='';
+  document.getElementById('import-step-preview').style.display='none';
+  document.getElementById('btn-import').style.display='none';
+  document.getElementById('file-input').value='';
+  document.getElementById('modal-import-bg').classList.add('open');
+}
+function closeImportModal(){document.getElementById('modal-import-bg').classList.remove('open');}
+
+function handleDragOver(e){e.preventDefault();document.getElementById('drop-zone').classList.add('drag-over');}
+function handleDragLeave(){document.getElementById('drop-zone').classList.remove('drag-over');}
+function handleDrop(e){
+  e.preventDefault();document.getElementById('drop-zone').classList.remove('drag-over');
+  const file=e.dataTransfer.files[0];if(file)processFile(file);
+}
+function handleFileSelect(e){const file=e.target.files[0];if(file)processFile(file);}
+
+function processFile(file){
+  const ext=file.name.split('.').pop().toLowerCase();
+  const reader=new FileReader();
+  reader.onload=function(e){
+    let rows=[];
+    if(ext==='csv'){
+      rows=parseCSV(e.target.result);
+    } else {
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
+    }
+    parseImportRows(rows);
+  };
+  if(ext==='csv') reader.readAsText(file,'UTF-8');
+  else reader.readAsArrayBuffer(file);
+}
+
+function parseCSV(text){
+  return text.split('\n').filter(l=>l.trim()).map(l=>{
+    const cells=[];let cur='',inQ=false;
+    for(let c of l){if(c==='"'){inQ=!inQ;}else if(c===','&&!inQ){cells.push(cur.trim());cur='';}else cur+=c;}
+    cells.push(cur.trim());return cells;
+  });
+}
+
+const TYPE_ANNUAL=['ลาพักร้อน','annual','พักร้อน','vacation','leave'];
+const TYPE_VISA=['ต่อบัตร','visa','ต่อ'];
+
+function parseImportRows(rawRows){
+  if(rawRows.length<2){showToast('ไม่พบข้อมูลในไฟล์');return;}
+  // skip header row
+  const dataRows=rawRows.slice(1);
+  importRows=dataRows.map((r,i)=>{
+    const name=String(r[0]||'').trim();
+    const typeRaw=String(r[1]||'').trim().toLowerCase();
+    const startRaw=r[2];
+    const endRaw=r[3];
+    const errors=[];
+    const res=resolve(name);
+    if(!name) errors.push('ไม่มีชื่อ');
+    else if(res===null||!activeRosterSet.has(res)) errors.push(`ไม่พบ "${name}" ในทะเบียน`);
+    let t='';
+    if(TYPE_ANNUAL.some(k=>typeRaw.includes(k))) t='annual';
+    else if(TYPE_VISA.some(k=>typeRaw.includes(k))) t='visa';
+    else errors.push('ประเภทไม่ถูกต้อง');
+    const sd=parseDate(startRaw);
+    const ed=parseDate(endRaw);
+    if(!sd) errors.push('วันที่เริ่มไม่ถูกต้อง');
+    if(!ed) errors.push('วันที่สิ้นสุดไม่ถูกต้อง');
+    if(sd&&ed&&ed<sd) errors.push('วันสิ้นสุดก่อนวันเริ่ม');
+    return {
+      row:i+2,name,resolvedName:res,typeRaw:r[1],t,
+      start:sd?toSlash(sd.toISOString().slice(0,10).split('-').reverse().join('/').replace(/\//g,'/')):String(startRaw),
+      end:sd?toSlash(ed?.toISOString().slice(0,10).split('-').reverse().join('/').replace(/\//g,'/')):String(endRaw),
+      startSlash:sd?`${String(sd.getDate()).padStart(2,'0')}/${String(sd.getMonth()+1).padStart(2,'0')}/${sd.getFullYear()}`:'',
+      endSlash:ed?`${String(ed.getDate()).padStart(2,'0')}/${String(ed.getMonth()+1).padStart(2,'0')}/${ed.getFullYear()}`:'',
+      days:sd&&ed&&ed>=sd?countDays(`${String(sd.getDate()).padStart(2,'0')}/${String(sd.getMonth()+1).padStart(2,'0')}/${sd.getFullYear()}`,`${String(ed.getDate()).padStart(2,'0')}/${String(ed.getMonth()+1).padStart(2,'0')}/${ed.getFullYear()}`):0,
+      errors,ok:errors.length===0
+    };
+  }).filter(r=>r.name||r.typeRaw||r.startSlash); // skip truly empty rows
+
+  showImportPreview();
+}
+
+function showImportPreview(){
+  const okRows=importRows.filter(r=>r.ok);
+  const errRows=importRows.filter(r=>!r.ok);
+  document.getElementById('import-step-upload').style.display='none';
+  document.getElementById('import-step-preview').style.display='';
+  document.getElementById('import-summary').innerHTML=
+    `พบ <b>${importRows.length}</b> รายการ · <span class="c-green"><b>${okRows.length}</b> นำเข้าได้</span>${errRows.length?` · <span class="c-red"><b>${errRows.length}</b> มีข้อผิดพลาด</span>`:''}`;
+  const tableHtml=`<table>
+    <thead><tr><th>แถว</th><th>ชื่อ</th><th>ประเภท</th><th>วันที่เริ่ม</th><th>วันที่สิ้นสุด</th><th>วัน</th><th>สถานะ</th></tr></thead>
+    <tbody>${importRows.map(r=>`<tr class="${r.ok?'row-ok':'row-err'}">
+      <td class="num-cell">${r.row}</td>
+      <td style="font-weight:500">${r.name}${r.resolvedName&&r.resolvedName!==r.name?`<span style="color:var(--ink3);font-size:10px"> → ${r.resolvedName}</span>`:''}</td>
+      <td>${r.t==='annual'?'🌴 พักร้อน':r.t==='visa'?'📋 ต่อบัตร':r.typeRaw}</td>
+      <td>${r.startSlash||r.start}</td><td>${r.endSlash||r.end}</td>
+      <td class="num-cell">${r.ok?r.days:''}</td>
+      <td>${r.ok?'<span class="tag-ok">✓ ตกลง</span>':'<span class="tag-err">✕ '+r.errors.join(', ')+'</span>'}</td>
+    </tr>`).join('')}</tbody></table>`;
+  document.getElementById('import-preview-table').innerHTML=tableHtml;
+  if(okRows.length>0){
+    document.getElementById('btn-import').style.display='';
+    document.getElementById('import-count').textContent=okRows.length;
+  } else {
+    document.getElementById('btn-import').style.display='none';
+  }
+}
+
+function confirmImport(){
+  const okRows=importRows.filter(r=>r.ok);
+  const extra=loadExtra();
+  okRows.forEach(r=>{
+    const id='imp_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+    if(r.t==='annual'){
+      extra.push({name:r.resolvedName||r.name,t:'annual',s:r.startSlash,e:r.endSlash,id,source:'นำเข้าไฟล์'});
+    } else {
+      extra.push({name:r.resolvedName||r.name,t:'visa',vs:r.startSlash,ve:r.endSlash,id,source:'นำเข้าไฟล์'});
+    }
+  });
+  saveExtra(extra);
+  if(okRows.length)syncYearTo(okRows[0].startSlash);
+  data=buildData();
+  closeImportModal();
+  render();
+  showToast(`นำเข้าสำเร็จ ${okRows.length} รายการ`);
+}
+
+/* ── ADD MODAL ── */
+function populateEmpSelect(val='',disabled=false){
+  const sel=document.getElementById('m-emp');
+  sel.innerHTML='<option value="">— เลือกพนักงาน —</option>';
+  activeRoster.forEach(r=>{
+    const o=document.createElement('option');
+    o.value=r.name;o.textContent=`${r.name} (${r.dept==='พนักงานสาขา'?'สาขา':'ผลิต'})`;
+    if(r.name===val)o.selected=true;
+    sel.appendChild(o);
+  });
+  sel.disabled=disabled;
+}
+let editingId=null;
+function openAddModal(presetEmp='',presetType='',editData=null){
+  editingId=editData?editData.id:null;
+  document.getElementById('add-modal-title').textContent=editingId?'แก้ไขวันลา':'บันทึกวันลา';
+  document.getElementById('btn-save').textContent=editingId?'บันทึกการแก้ไข':'บันทึก';
+  modalType=presetType||(currentPage==='visa'?'visa':currentPage==='sick'?'sick':'annual');
+  populateEmpSelect(presetEmp,!!editingId); // disable changing employee while editing
+  selectType(modalType);
+  if(editData){
+    const ss=editData.t==='visa'?editData.vs:editData.s;
+    const ee=editData.t==='visa'?editData.ve:editData.e;
+    document.getElementById('m-start').value=slashToIso(ss);
+    document.getElementById('m-end').value=slashToIso(ee);
+    updateCalc();
+  } else {
+    document.getElementById('m-start').value='';
+    document.getElementById('m-end').value='';
+    document.getElementById('calc-preview').style.display='none';
+  }
+  ['err-emp','err-start','err-end'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('modal-add-bg').classList.add('open');
+}
+function closeAddModal(){
+  document.getElementById('modal-add-bg').classList.remove('open');
+  editingId=null;
+  document.getElementById('add-modal-title').textContent='บันทึกวันลา';
+  document.getElementById('btn-save').textContent='บันทึก';
+}
+function openAddModalForEmp(){if(!drawerEmp)return;closeDrawer();setTimeout(()=>openAddModal(drawerEmp.name,drawerTab),180);}
+function editEntry(id){
+  const item=loadExtra().find(x=>x.id===id);
+  if(!item){showToast('รายการนี้แก้ไขไม่ได้ (เป็นข้อมูลตั้งต้น)');return;}
+  closeDrawer();
+  setTimeout(()=>openAddModal(item.name,item.t,item),180);
+}
+function selectType(t){
+  modalType=t;
+  ['annual','sick','visa'].forEach(type=>{
+    const el=document.getElementById('tb-'+type);
+    el.classList.remove('active','active-teal','active-pink');
+    if(type===t)el.classList.add(t==='visa'?'active-teal':t==='sick'?'active-pink':'active');
+  });
+  const s=document.getElementById('btn-save');
+  s.className='btn '+(t==='visa'?'btn-purple':t==='sick'?'btn-pink':'btn-dark');
+  updateCalc();
+}
+function updateCalc(){
+  const s=document.getElementById('m-start').value;
+  const e=document.getElementById('m-end').value;
+  const emp=document.getElementById('m-emp').value;
+  const prev=document.getElementById('calc-preview');
+  if(!s||!e){prev.style.display='none';return;}
+  const d=countDays(isoToSlash(s),isoToSlash(e));
+  if(d<=0){prev.style.display='none';return;}
+  if(modalType==='annual'){
+    const empData=data.find(x=>x.name===emp);
+    const used=empData?empData.annualDays:0;
+    const newTotal=used+d;
+    const remain=ANNUAL_LIMIT-newTotal;
+    prev.className='calc-preview';prev.style.display='block';
+    prev.textContent=`${d} วัน · ใช้รวม ${newTotal}/${ANNUAL_LIMIT} วัน (${remain>=0?'เหลือ '+remain:'เกิน '+Math.abs(remain)} วัน)`;
+    prev.style.color=remain<0?'var(--red)':'var(--blue)';
+    prev.style.background=remain<0?'var(--red-lt)':'var(--blue-lt)';
+  } else if(modalType==='sick'){
+    prev.className='calc-preview pink';prev.style.display='block';prev.style.color='';prev.style.background='';
+    prev.textContent=`ลาป่วย ${d} วัน (${fmtDate(isoToSlash(s))} – ${fmtDate(isoToSlash(e))})`;
+  } else {
+    prev.className='calc-preview teal';prev.style.display='block';prev.style.color='';prev.style.background='';
+    prev.textContent=`ต่อบัตร ${d} วัน (${fmtDate(isoToSlash(s))} – ${fmtDate(isoToSlash(e))})`;
+  }
+}
+function saveLeave(){
+  const emp=document.getElementById('m-emp').value;
+  const s=document.getElementById('m-start').value;
+  const e=document.getElementById('m-end').value;
+  let ok=true;
+  if(!emp){document.getElementById('err-emp').style.display='block';ok=false;}else document.getElementById('err-emp').style.display='none';
+  if(!s){document.getElementById('err-start').style.display='block';ok=false;}else document.getElementById('err-start').style.display='none';
+  if(!e){document.getElementById('err-end').style.display='block';ok=false;}else document.getElementById('err-end').style.display='none';
+  if(!ok)return;
+  const ss=normalizeSlashYear(isoToSlash(s)),ee=normalizeSlashYear(isoToSlash(e));
+  if(!parseDate(ss)||!parseDate(ee)){document.getElementById('err-end').textContent='รูปแบบวันที่ไม่ถูกต้อง ลองเลือกวันที่ใหม่อีกครั้ง';document.getElementById('err-end').style.display='block';return;}
+  if(countDays(ss,ee)<=0){document.getElementById('err-end').textContent='วันสิ้นสุดต้องไม่ก่อนวันเริ่ม';document.getElementById('err-end').style.display='block';return;}
+  const extra=loadExtra();
+  const typeLabel=modalType==='annual'?'ลาพักร้อน '+countDays(ss,ee)+' วัน':modalType==='sick'?'ลาป่วย '+countDays(ss,ee)+' วัน':'ต่อบัตร';
+  if(editingId){
+    const idx=extra.findIndex(x=>x.id===editingId);
+    if(idx>-1){
+      const src=extra[idx].source||'HR เพิ่ม';
+      extra[idx]=modalType==='visa'?{name:emp,t:'visa',vs:ss,ve:ee,id:editingId,source:src}:{name:emp,t:modalType,s:ss,e:ee,id:editingId,source:src};
+    }
+    saveExtra(extra);syncYearTo(ss);switchToPage(modalType);data=buildData();closeAddModal();render();
+    showToast(`แก้ไขสำเร็จ · ${emp} ${typeLabel}`);
+    if(drawerEmp&&drawerEmp.name===emp){const u=data.find(x=>x.name===emp);if(u){drawerEmp=u;renderDrawerBody();}}
+    return;
+  }
+  const id='ex_'+Date.now();
+  if(modalType==='annual') extra.push({name:emp,t:'annual',s:ss,e:ee,id,source:'HR เพิ่ม'});
+  else if(modalType==='sick') extra.push({name:emp,t:'sick',s:ss,e:ee,id,source:'HR เพิ่ม'});
+  else extra.push({name:emp,t:'visa',vs:ss,ve:ee,id,source:'HR เพิ่ม'});
+  saveExtra(extra);syncYearTo(ss);switchToPage(modalType);data=buildData();closeAddModal();render();
+  showToast(`บันทึกสำเร็จ · ${emp} ${typeLabel}`);
+  if(drawerEmp&&drawerEmp.name===emp){const u=data.find(x=>x.name===emp);if(u){drawerEmp=u;renderDrawerBody();}}
+}
+function deleteEntry(id){
+  if(!confirm('ยืนยันลบรายการนี้?'))return;
+  let extra=loadExtra();extra=extra.filter(x=>x.id!==id);
+  saveExtra(extra);data=buildData();render();
+  if(drawerEmp){const u=data.find(x=>x.name===drawerEmp.name);if(u){drawerEmp=u;renderDrawerBody();}}
+  showToast('ลบรายการแล้ว');
+}
+
+/* ── TOAST ── */
+function showToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+/* ── PAGE / FILTER / RENDER ── */
+function setPage(el){
+  currentPage=el.dataset.page;
+  document.querySelectorAll('.page-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter='all';
+  document.querySelectorAll('.ft').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.ft[data-f="all"]').classList.add('active');
+  document.querySelector('.ft[data-f="over"]').style.display=currentPage==='annual'?'':'none';
+  render();
+}
+function setFilter(el){currentFilter=el.dataset.f;document.querySelectorAll('.ft').forEach(t=>t.classList.remove('active'));el.classList.add('active');render();}
+function getRows(){
+  const q=document.getElementById('search').value.trim();
+  const dept=document.getElementById('dept-sel').value;
+  return data.filter(d=>{
+    if(q&&!d.name.includes(q))return false;
+    if(dept&&d.dept!==dept)return false;
+    if(currentPage==='annual'){if(currentFilter==='used')return d.annualDays>0;if(currentFilter==='over')return d.annualDays>ANNUAL_LIMIT;}
+    else if(currentPage==='sick'){if(currentFilter==='used')return d.sickDays>0;}
+    else{if(currentFilter==='used')return d.visaCount>0;}
+    return true;
+  });
+}
+function populateYearSelect(){
+  const sel=document.getElementById('year-sel');
+  const years=new Set([new Date().getFullYear()]);
+  [...seedLeave,...loadExtra()].forEach(r=>{
+    const ds=r.t==='visa'?r.vs:r.s;
+    const d=parseDate(ds);
+    if(d)years.add(d.getFullYear());
+  });
+  const sorted=[...years].sort((a,b)=>b-a);
+  sel.innerHTML=sorted.map(y=>`<option value="${y}">ปี ${y+543}</option>`).join('');
+  sel.value=currentYear;
+  sel.disabled=sorted.length<=1; // มีข้อมูลปีเดียว ไม่ต้องให้เลือก พอมีหลายปีจะเปิดให้เลือกเองอัตโนมัติ
+}
+function onYearChange(){
+  currentYear=+document.getElementById('year-sel').value;
+  document.getElementById('h-year').textContent=currentYear+543;
+  data=buildData();
+  render();
+}
+function syncYearTo(dateSlash){
+  const d=parseDate(dateSlash);
+  if(!d)return;
+  const y=d.getFullYear();
+  if(y!==currentYear){
+    currentYear=y;
+    populateYearSelect();
+    const sel=document.getElementById('year-sel');
+    if(sel)sel.value=currentYear;
+    document.getElementById('h-year').textContent=currentYear+543;
+  }
+}
+function switchToPage(page){
+  if(currentPage===page)return;
+  currentPage=page;
+  document.querySelectorAll('.page-tab').forEach(t=>t.classList.toggle('active',t.dataset.page===page));
+  currentFilter='all';
+  document.querySelectorAll('.ft').forEach(t=>t.classList.remove('active'));
+  const allBtn=document.querySelector('.ft[data-f="all"]');if(allBtn)allBtn.classList.add('active');
+  const overBtn=document.querySelector('.ft[data-f="over"]');if(overBtn)overBtn.style.display=page==='annual'?'':'none';
+}
+function render(){const rows=getRows();renderSummary(rows);renderTable(rows);}
+
+function csvCell(v){
+  const s=String(v??'');
+  return /[",\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+}
+function exportToExcel(){
+  const rows=getRows(); // เคารพตัวกรองแผนก/คำค้นหาที่ HR เลือกอยู่ตอนนี้ + ปีที่กำลังดู
+  const yearBE=currentYear+543;
+  const header=['ชื่อพนักงาน','แผนก','ประเภทการลา','วันที่เริ่ม','วันที่สิ้นสุด','จำนวนวัน (ปีนี้)','ที่มา','ปี (พ.ศ.)'];
+  const out=[header];
+  const typeLabel={annual:'ลาพักร้อน',sick:'ลาป่วย',visa:'ต่อบัตร'};
+  rows.forEach(d=>{
+    const deptLabel=d.dept==='พนักงานสาขา'?'สาขา':'ฝ่ายผลิต';
+    const allLogs=[
+      ...d.annualLog.map(x=>({...x,t:'annual'})),
+      ...d.sickLog.map(x=>({...x,t:'sick'})),
+      ...d.visaLog.map(x=>({...x,t:'visa',days:countDays(x.start,x.end)})),
+    ];
+    if(!allLogs.length){
+      out.push([d.name,deptLabel,'— ไม่มีการลา —','','','','',yearBE]);
+      return;
+    }
+    allLogs.forEach(x=>{
+      out.push([d.name,deptLabel,typeLabel[x.t]||x.t,fmtDate(x.start),fmtDate(x.end),x.days,x.source||'',yearBE]);
+    });
+  });
+  const csv='\uFEFF'+out.map(row=>row.map(csvCell).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`วันลา_ผึ้งน้อย_${yearBE}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast(`ส่งออกข้อมูล ${rows.length} คน (ปี ${yearBE}) แล้ว`);
+}
+function renderSummary(rows){
+  const el=document.getElementById('summary');
+  if(currentPage==='annual'){
+    const total=rows.reduce((s,d)=>s+d.annualDays,0);
+    const over=rows.filter(d=>d.annualDays>ANNUAL_LIMIT).length;
+    const noLeave=rows.filter(d=>d.annualDays===0).length;
+    const near=rows.filter(d=>d.annualDays>=10&&d.annualDays<=ANNUAL_LIMIT).length;
+    const normal=rows.length-over-noLeave-near;
+    const avgRemain=rows.length?Math.round(rows.reduce((s,d)=>s+Math.max(0,ANNUAL_LIMIT-d.annualDays),0)/rows.length):0;
+    const pct=n=>rows.length?Math.round(n/rows.length*100):0;
+    const seg=(n,color,label)=>n?`<div class="status-seg" style="width:${pct(n)}%;background:${color}" title="${label} ${n} คน (${pct(n)}%)"></div>`:'';
+    const okUsed=rows.length-noLeave-over;
+    el.innerHTML=`
+      <div class="scard hi"><div class="scard-label">พนักงาน</div><div class="scard-val">${rows.length}</div><div class="scard-sub">จาก ${data.length} คน</div></div>
+      <div class="scard"><div class="scard-label">ยังไม่เคยลา</div><div class="scard-val">${noLeave}</div><div class="scard-sub">คน</div></div>
+      <div class="scard"><div class="scard-label">ลาปกติ ไม่เกิน 12 วัน</div><div class="scard-val c-blue">${okUsed}</div><div class="scard-sub">คน</div></div>
+      <div class="scard"><div class="scard-label">เกินโควต้า</div><div class="scard-val${over>0?' c-red':''}">${over}</div><div class="scard-sub">คน</div></div>
+      <div class="status-bar-card">
+        <div class="status-bar-title">ภาพรวมสถานะการใช้วันลาของพนักงาน (จาก ${rows.length} คน · โควต้า ${ANNUAL_LIMIT} วัน/ปี)</div>
+        <div class="status-bar-track">
+          ${seg(noLeave,'#D1D5DB','ยังไม่ลา')}
+          ${seg(normal,'var(--blue)','ใช้ปกติ')}
+          ${seg(near,'var(--amber)','ใกล้เต็มโควต้า')}
+          ${seg(over,'var(--red)','เกินโควต้า')}
+        </div>
+        <div class="status-legend">
+          <div class="status-legend-item"><span class="status-legend-dot" style="background:#D1D5DB"></span>ยังไม่ลา <b>${noLeave}</b> คน <span class="pct">(${pct(noLeave)}%)</span></div>
+          <div class="status-legend-item"><span class="status-legend-dot" style="background:var(--blue)"></span>ใช้ปกติ (1-9 วัน) <b>${normal}</b> คน <span class="pct">(${pct(normal)}%)</span></div>
+          <div class="status-legend-item"><span class="status-legend-dot" style="background:var(--amber)"></span>ใกล้เต็มโควต้า (10-12 วัน) <b>${near}</b> คน <span class="pct">(${pct(near)}%)</span></div>
+          <div class="status-legend-item"><span class="status-legend-dot" style="background:var(--red)"></span>เกินโควต้า (มากกว่า 12 วัน) <b>${over}</b> คน <span class="pct">(${pct(over)}%)</span></div>
+        </div>
+      </div>`;
+  } else if(currentPage==='sick'){
+    const total=rows.reduce((s,d)=>s+d.sickDays,0);
+    const hasSick=rows.filter(d=>d.sickDays>0).length;
+    const maxSick=rows.reduce((m,d)=>Math.max(m,d.sickDays),0);
+    const withFuture=rows.filter(d=>d.sickHasFuture).length;
+    el.innerHTML=`
+      <div class="scard hi"><div class="scard-label">พนักงาน</div><div class="scard-val">${rows.length}</div><div class="scard-sub">จาก ${data.length} คน</div></div>
+      <div class="scard"><div class="scard-label">ลาป่วยรวม</div><div class="scard-val" style="color:var(--pink)">${total}</div><div class="scard-sub">วัน</div></div>
+      <div class="scard"><div class="scard-label">เคยลาป่วย</div><div class="scard-val">${hasSick}</div><div class="scard-sub">คน</div></div>
+      <div class="scard"><div class="scard-label">สูงสุด</div><div class="scard-val" style="color:var(--pink)">${maxSick}</div><div class="scard-sub">วัน/คน</div></div>
+      ${withFuture?`<div class="status-bar-card"><div class="status-bar-title" style="margin-bottom:0">🔜 มี ${withFuture} คนที่แจ้งลาป่วยล่วงหน้า (ยังไม่ถึงวันที่)</div></div>`:''}`;
+  } else {
+    const total=rows.reduce((s,d)=>s+d.visaCount,0);
+    const hasVisa=rows.filter(d=>d.visaCount>0).length;
+    const maxVisa=rows.reduce((m,d)=>Math.max(m,d.visaCount),0);
+    el.innerHTML=`
+      <div class="scard hi"><div class="scard-label">พนักงาน</div><div class="scard-val">${rows.length}</div><div class="scard-sub">จาก ${data.length} คน</div></div>
+      <div class="scard"><div class="scard-label">ต่อบัตรรวม</div><div class="scard-val c-teal">${total}</div><div class="scard-sub">ครั้ง</div></div>
+      <div class="scard"><div class="scard-label">เคยต่อบัตร</div><div class="scard-val">${hasVisa}</div><div class="scard-sub">คน</div></div>
+      <div class="scard"><div class="scard-label">สูงสุด</div><div class="scard-val c-teal">${maxVisa}</div><div class="scard-sub">ครั้ง/คน</div></div>`;
+  }
+}
+function renderTable(rows){
+  const thead=document.getElementById('thead'),tbody=document.getElementById('tbody');
+  if(currentPage==='annual'){
+    thead.innerHTML=`<tr><th style="width:32px">#</th><th>ชื่อพนักงาน</th><th class="hide-sm">แผนก</th><th>ใช้ไป</th><th>คงเหลือ</th><th class="hide-sm" style="min-width:120px">โควต้า</th><th>สถานะ</th></tr>`;
+    if(!rows.length){tbody.innerHTML=`<tr><td colspan="7" class="empty-table">ไม่พบข้อมูล</td></tr>`;return;}
+    tbody.innerHTML=rows.map((d,i)=>{
+      const remain=Math.max(0,ANNUAL_LIMIT-d.annualDays),over=d.annualDays-ANNUAL_LIMIT;
+      const pct=Math.min(100,Math.round((d.annualDays/ANNUAL_LIMIT)*100));
+      const fillColor=d.annualDays>ANNUAL_LIMIT?'var(--red)':'var(--blue)';
+      let sp=d.annualDays>ANNUAL_LIMIT?`<span class="pill p-warn">เกิน ${over} วัน</span>`:
+        d.annualDays>0&&remain===0?`<span class="pill p-amber">หมดโควต้า</span>`:
+        d.annualDays>0?`<span class="pill p-ok">เหลือ ${remain} วัน</span>`:
+        `<span class="pill p-muted">ยังไม่ลา</span>`;
+      return `<tr onclick="openDrawer(${i})">
+        <td class="num-cell">${i+1}</td><td class="name-cell">${d.name}${d.hasFuture?` <span class="pill p-future" title="มีวันลาล่วงหน้า ${d.futureDays} วัน">ล่วงหน้า +${d.futureDays}</span>`:''}</td>
+        <td class="hide-sm"><span class="p-dept">${d.dept==='พนักงานสาขา'?'สาขา':'ผลิต'}</span></td>
+        <td><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--blue)">${d.annualDays}</span> <span class="muted">วัน</span></td>
+        <td><span style="font-family:'IBM Plex Mono',monospace;font-weight:600">${remain}</span> <span class="muted">วัน</span></td>
+        <td class="hide-sm"><div class="quota-wrap"><span class="quota-remain">${pct}%</span><div class="quota-track"><div class="quota-fill" style="width:${pct}%;background:${fillColor}"></div></div></div></td>
+        <td>${sp}</td></tr>`;
+    }).join('');
+  } else if(currentPage==='sick'){
+    thead.innerHTML=`<tr><th style="width:32px">#</th><th>ชื่อพนักงาน</th><th class="hide-sm">แผนก</th><th>ลาป่วย</th><th>ล่าสุด</th><th class="hide-sm">สถานะ</th></tr>`;
+    if(!rows.length){tbody.innerHTML=`<tr><td colspan="6" class="empty-table">ไม่พบข้อมูล</td></tr>`;return;}
+    tbody.innerHTML=rows.map((d,i)=>{
+      const last=d.sickLog.length?d.sickLog[0]:null;
+      return `<tr onclick="openDrawer(${i},'sick')">
+        <td class="num-cell">${i+1}</td><td class="name-cell">${d.name}${d.sickHasFuture?` <span class="pill p-future" title="มีวันลาป่วยล่วงหน้า">ล่วงหน้า</span>`:''}</td>
+        <td class="hide-sm"><span class="p-dept">${d.dept==='พนักงานสาขา'?'สาขา':'ผลิต'}</span></td>
+        <td><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--pink)">${d.sickDays}</span> <span class="muted">วัน</span></td>
+        <td class="muted" style="font-size:12px">${last?fmtDate(last.start):'—'}</td>
+        <td class="hide-sm">${d.sickDays>0?`<span class="pill p-ok" style="background:var(--pink-lt);color:var(--pink)">เคยลาป่วย</span>`:`<span class="pill p-muted">ไม่เคย</span>`}</td></tr>`;
+    }).join('');
+  } else {
+    thead.innerHTML=`<tr><th style="width:32px">#</th><th>ชื่อพนักงาน</th><th class="hide-sm">แผนก</th><th>ต่อบัตร</th><th class="hide-sm">กราฟ</th><th>ล่าสุด</th></tr>`;
+    if(!rows.length){tbody.innerHTML=`<tr><td colspan="6" class="empty-table">ไม่พบข้อมูล</td></tr>`;return;}
+    tbody.innerHTML=rows.map((d,i)=>{
+      const last=d.visaLog.length?d.visaLog[0]:null;
+      const dotsHtml=Array.from({length:Math.min(d.visaCount,12)},()=>`<div class="visa-dot"></div>`).join('');
+      return `<tr onclick="openDrawer(${i},'visa')">
+        <td class="num-cell">${i+1}</td><td class="name-cell">${d.name}</td>
+        <td class="hide-sm"><span class="p-dept">${d.dept==='พนักงานสาขา'?'สาขา':'ผลิต'}</span></td>
+        <td><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--teal)">${d.visaCount}</span> <span class="muted">ครั้ง</span></td>
+        <td class="hide-sm"><div class="visa-dots">${dotsHtml}</div></td>
+        <td class="muted" style="font-size:12px">${last?fmtDate(last.start):'—'}</td></tr>`;
+    }).join('');
+  }
+}
+
+/* ── DRAWER ── */
+function openDrawer(idx,forceTab=null){
+  const rows=getRows();drawerEmp=rows[idx];if(!drawerEmp)return;
+  drawerTab=forceTab||(currentPage==='visa'?'visa':currentPage==='sick'?'sick':'annual');
+  document.getElementById('d-name').textContent=drawerEmp.name;
+  document.getElementById('d-dept').textContent=drawerEmp.dept;
+  document.querySelectorAll('.d-tab').forEach(t=>{t.classList.remove('active');if(t.dataset.dt===drawerTab)t.classList.add('active');});
+  renderDrawerBody();
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+function setDrawerTab(el){drawerTab=el.dataset.dt;document.querySelectorAll('.d-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderDrawerBody();}
+function renderDrawerBody(){
+  const d=drawerEmp,body=document.getElementById('d-body');
+  if(drawerTab==='annual'){
+    const remain=Math.max(0,ANNUAL_LIMIT-d.annualDays),over=d.annualDays-ANNUAL_LIMIT;
+    const pct=Math.min(100,Math.round((d.annualDays/ANNUAL_LIMIT)*100));
+    const r=34,circ=2*Math.PI*r,offset=circ*(1-pct/100);
+    const isOver=d.annualDays>ANNUAL_LIMIT;
+    const strokeColor=isOver?'var(--red)':'var(--blue)';
+    const logHtml=d.annualLog.length
+      ?`<div class="log-list">${d.annualLog.map(x=>`
+          <div class="log-row">
+            <div class="log-row-left"><div class="log-dates">${fmtDate(x.start)} – ${fmtDate(x.end)}${x.future>0?` <span class="pill p-future" style="margin-left:6px">${x.isFuture?'ล่วงหน้าทั้งหมด':'มีส่วนล่วงหน้า'}</span>`:''}</div><div class="log-source">${x.source}</div></div>
+            <div class="log-row-right">
+              <div class="log-days-badge">${x.days} วัน</div>
+              ${x.id?`<button class="log-del" onclick="event.stopPropagation();editEntry('${x.id}')" title="แก้ไข">✏️</button><button class="log-del" onclick="event.stopPropagation();deleteEntry('${x.id}')" title="ลบ">✕</button>`:''}
+            </div>
+          </div>`).join('')}</div>`
+      :`<div class="empty-msg">ยังไม่มีการลาพักร้อน</div>`;
+    body.innerHTML=`
+      <div class="${isOver?'quota-hero warn-hero':'quota-hero'}">
+        <div class="quota-ring">
+          <svg viewBox="0 0 80 80"><circle class="ring-bg" cx="40" cy="40" r="${r}"/>
+          <circle class="ring-fill" cx="40" cy="40" r="${r}" stroke="${strokeColor}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/></svg>
+          <div class="ring-text"><div class="ring-big">${d.annualDays}</div><div class="ring-sm">วัน</div></div>
+        </div>
+        <div class="quota-info">
+          <div class="qi-label">${isOver?'เกินโควต้า':'วันลาคงเหลือ'}</div>
+          <div class="qi-remain" style="color:${isOver?'var(--red)':'var(--ink)'}">${isOver?'เกิน '+over+' วัน':remain+' วัน'}</div>
+          <div class="qi-of">จาก ${ANNUAL_LIMIT} วัน/ปี · ใช้ไป ${pct}% (นับถึงวันนี้)</div>
+          ${d.hasFuture?`<div class="qi-of" style="color:var(--purple);margin-top:3px">🔜 มีวันลาล่วงหน้าอีก ${d.futureDays} วัน (ยังไม่ถึงวันที่ จึงยังไม่หักโควต้า)</div>`:''}
+        </div>
+      </div>
+      <div class="log-section-title">ประวัติการลา (${d.annualLog.length} รายการ)</div>${logHtml}`;
+  } else if(drawerTab==='sick'){
+    const logHtml=d.sickLog.length
+      ?`<div class="log-list">${d.sickLog.map(x=>`
+          <div class="log-row">
+            <div class="log-row-left"><div class="log-dates">${fmtDate(x.start)} – ${fmtDate(x.end)}${x.future>0?` <span class="pill p-future" style="margin-left:6px">${x.isFuture?'ล่วงหน้าทั้งหมด':'มีส่วนล่วงหน้า'}</span>`:''}</div><div class="log-source">${x.source}</div></div>
+            <div class="log-row-right">
+              <div class="log-days-badge" style="background:var(--pink-lt);color:var(--pink)">${x.days} วัน</div>
+              ${x.id?`<button class="log-del" onclick="event.stopPropagation();editEntry('${x.id}')" title="แก้ไข">✏️</button><button class="log-del" onclick="event.stopPropagation();deleteEntry('${x.id}')" title="ลบ">✕</button>`:''}
+            </div>
+          </div>`).join('')}</div>`
+      :`<div class="empty-msg">ยังไม่มีการลาป่วย</div>`;
+    body.innerHTML=`
+      <div class="visa-hero">
+        <div><div class="visa-big" style="color:var(--pink)">${d.sickDays}</div><div class="visa-label">วันลาป่วยรวมในปีนี้</div></div>
+        ${d.sickLog.length?`<div style="margin-left:auto;text-align:right"><div style="font-size:11px;color:var(--ink3)">ล่าสุด</div><div style="font-size:14px;font-weight:600;color:var(--pink);margin-top:2px">${fmtDate(d.sickLog[0].start)}</div></div>`:''}
+      </div>
+      ${d.sickHasFuture?`<div class="qi-of" style="color:var(--purple);margin:-6px 0 12px">🔜 มีวันลาป่วยล่วงหน้าอีก ${d.sickFutureDays} วัน (ยังไม่ถึงวันที่)</div>`:''}
+      <div class="log-section-title">ประวัติการลาป่วย (${d.sickLog.length} รายการ)</div>${logHtml}`;
+  } else {
+    const last=d.visaLog.length?d.visaLog[0]:null;
+    const logHtml=d.visaLog.length
+      ?`<div class="log-list">${d.visaLog.map((x,i)=>`
+          <div class="visa-log-row">
+            <div style="display:flex;align-items:center;gap:8px;flex:1">
+              <span class="visa-idx">${String(d.visaLog.length-i).padStart(2,'0')}</span>
+              <div><div class="visa-dates">${fmtDate(x.start)} – ${fmtDate(x.end)}</div><div class="log-source" style="font-size:10px;color:var(--ink4);margin-top:1px">${x.source}</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <div class="visa-days-badge">${countDays(x.start,x.end)} วัน</div>
+              ${x.id?`<button class="log-del" onclick="event.stopPropagation();editEntry('${x.id}')" title="แก้ไข">✏️</button><button class="log-del" onclick="event.stopPropagation();deleteEntry('${x.id}')" title="ลบ">✕</button>`:''}
+            </div>
+          </div>`).join('')}</div>`
+      :`<div class="empty-msg">ยังไม่มีการต่อบัตร</div>`;
+    body.innerHTML=`
+      <div class="visa-hero">
+        <div><div class="visa-big">${d.visaCount}</div><div class="visa-label">ครั้งที่ต่อบัตรในปีนี้</div></div>
+        ${last?`<div style="margin-left:auto;text-align:right"><div style="font-size:11px;color:var(--ink3)">ล่าสุด</div><div style="font-size:14px;font-weight:600;color:var(--teal);margin-top:2px">${fmtDate(last.start)}</div></div>`:''}
+      </div>
+      <div class="log-section-title">ประวัติการต่อบัตร (${d.visaCount} ครั้ง)</div>${logHtml}`;
+  }
+}
+function closeDrawer(){document.getElementById('overlay').classList.remove('open');document.getElementById('drawer').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAddModal();closeImportModal();closeDrawer();closeRequestsModal();closeManageEmpModal();}});
+
+/* ══════════ EMPLOYEE REQUEST FORM (?request=1) ══════════ */
+let rqType='annual';
+function populateRqEmpSelect(){
+  const sel=document.getElementById('rq-emp');
+  sel.innerHTML='<option value="">— เลือกพนักงาน —</option>';
+  activeRoster.forEach(r=>{
+    const o=document.createElement('option');
+    o.value=r.name;o.textContent=`${r.name} (${r.dept==='พนักงานสาขา'?'สาขา':'ผลิต'})`;
+    sel.appendChild(o);
+  });
+}
+function rqSelectType(t){
+  rqType=t;
+  ['annual','sick','visa'].forEach(type=>{
+    const el=document.getElementById('rq-tb-'+type);
+    el.classList.remove('active','active-teal','active-pink');
+    if(type===t)el.classList.add(t==='visa'?'active-teal':t==='sick'?'active-pink':'active');
+  });
+  const s=document.getElementById('rq-submit-btn');
+  s.className='btn '+(t==='visa'?'btn-purple':t==='sick'?'btn-pink':'btn-dark');
+  s.style.cssText+='width:100%;height:42px;justify-content:center;margin-top:6px';
+  rqUpdateCalc();
+}
+function rqUpdateCalc(){
+  const s=document.getElementById('rq-start').value,e=document.getElementById('rq-end').value;
+  const prev=document.getElementById('rq-calc-preview');
+  if(!s||!e){prev.style.display='none';return;}
+  const d=countDays(isoToSlash(s),isoToSlash(e));
+  if(d<=0){prev.style.display='none';return;}
+  const cls=rqType==='visa'?' teal':rqType==='sick'?' pink':'';
+  prev.className='calc-preview'+cls;prev.style.display='block';
+  const label=rqType==='annual'?'ลาพักร้อน':rqType==='sick'?'ลาป่วย':'ต่อบัตร';
+  prev.textContent=`${label} ${d} วัน (${fmtDate(isoToSlash(s))} – ${fmtDate(isoToSlash(e))})`;
+}
+async function submitRequest(){
+  const emp=document.getElementById('rq-emp').value;
+  const s=document.getElementById('rq-start').value,e=document.getElementById('rq-end').value;
+  const note=document.getElementById('rq-note').value.trim();
+  let ok=true;
+  if(!emp){document.getElementById('rq-err-emp').style.display='block';ok=false;}else document.getElementById('rq-err-emp').style.display='none';
+  if(!s){document.getElementById('rq-err-start').style.display='block';ok=false;}else document.getElementById('rq-err-start').style.display='none';
+  if(!e){document.getElementById('rq-err-end').style.display='block';ok=false;}else document.getElementById('rq-err-end').style.display='none';
+  if(!ok)return;
+  const ss=normalizeSlashYear(isoToSlash(s)),ee=normalizeSlashYear(isoToSlash(e));
+  if(!parseDate(ss)||!parseDate(ee)){document.getElementById('rq-err-end').textContent='รูปแบบวันที่ไม่ถูกต้อง ลองเลือกวันที่ใหม่อีกครั้ง';document.getElementById('rq-err-end').style.display='block';return;}
+  if(countDays(ss,ee)<=0){document.getElementById('rq-err-end').textContent='วันสิ้นสุดต้องไม่ก่อนวันเริ่ม';document.getElementById('rq-err-end').style.display='block';return;}
+  const btn=document.getElementById('rq-submit-btn');btn.disabled=true;btn.textContent='กำลังส่ง...';
+  // fetch freshest pending list first to avoid overwriting someone else's concurrent submission
+  let latest=[];try{latest=JSON.parse(await storageGet(REQ_KEY)||'[]');}catch{latest=[];}
+  const id='req_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  latest.push({id,name:emp,t:rqType,s:ss,e:ee,note,submittedAt:new Date().toISOString(),status:'pending'});
+  await savePending(latest);
+  // ยืนยันว่าข้อมูลบันทึกเข้า shared storage จริง โดยอ่านสดจาก storage อีกครั้ง (ไม่ใช้ cache)
+  let verified=false;
+  try{
+    const check=JSON.parse(await storageGet(REQ_KEY)||'[]');
+    verified=check.some(r=>r.id===id);
+  }catch(e){verified=false;}
+  btn.disabled=false;btn.textContent='ส่งคำขอลา';
+  if(!verified){
+    alert('⚠️ ไม่สามารถบันทึกคำขอลาผ่านระบบนี้ได้ในขณะนี้\n\nกรุณาแจ้ง HR โดยตรง หรือลองใหม่อีกครั้ง\n(อาจเกิดจากระบบฐานข้อมูลกลางขัดข้องชั่วคราว)');
+    return;
+  }
+  document.getElementById('req-form-wrap').style.display='none';
+  document.getElementById('req-success').style.display='block';
+}
+function rqReset(){
+  document.getElementById('req-form-wrap').style.display='';
+  document.getElementById('req-success').style.display='none';
+  document.getElementById('rq-emp').value='';
+  document.getElementById('rq-start').value='';
+  document.getElementById('rq-end').value='';
+  document.getElementById('rq-note').value='';
+  document.getElementById('rq-calc-preview').style.display='none';
+  rqSelectType('annual');
+  const btn=document.getElementById('rq-submit-btn');btn.disabled=false;btn.textContent='ส่งคำขอลา';
+}
+
+/* ══════════ HR: REQUESTS APPROVAL ══════════ */
+function updatePendingBadge(){
+  const n=getPending().filter(r=>r.status==='pending').length;
+  const badge=document.getElementById('req-badge-btn'),count=document.getElementById('req-badge-count');
+  if(!badge)return;
+  count.textContent=n;
+  badge.classList.toggle('zero',n===0);
+}
+async function openRequestsModal(){
+  document.getElementById('modal-requests-bg').classList.add('open');
+  document.getElementById('requests-body').innerHTML=`<div class="empty-msg">กำลังโหลด...</div>`;
+  await refreshFromStorage();
+  data=buildData();
+  renderRequestsList();
+  updatePendingBadge();
+}
+function closeRequestsModal(){document.getElementById('modal-requests-bg').classList.remove('open');}
+function renderRequestsList(){
+  const body=document.getElementById('requests-body');
+  const pending=getPending().filter(r=>r.status==='pending').sort((a,b)=>b.submittedAt.localeCompare(a.submittedAt));
+  if(!pending.length){body.innerHTML=`<div class="empty-msg">ไม่มีคำขอลารออนุมัติ</div>`;return;}
+  body.innerHTML=pending.map(r=>{
+    const dEnd=r.e;
+    const d=countDays(r.s,dEnd);
+    return `<div class="req-row">
+      <div class="req-row-top">
+        <div><div class="req-row-name">${r.name} <span class="pill ${r.t==='visa'?'p-ok':'p-dept'}" style="margin-left:4px">${r.t==='annual'?'ลาพักร้อน':'ต่อบัตร'}</span></div>
+        <div class="req-row-meta">${fmtDate(r.s)} – ${fmtDate(dEnd)} · ${d} วัน · ส่งเมื่อ ${new Date(r.submittedAt).toLocaleString('th-TH',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div></div>
+      </div>
+      ${r.note?`<div class="req-row-note">📝 ${r.note}</div>`:''}
+      <div class="req-row-actions">
+        <button class="req-btn req-btn-ok" onclick="approveRequest('${r.id}')">✓ อนุมัติ</button>
+        <button class="req-btn req-btn-no" onclick="rejectRequest('${r.id}')">✕ ปฏิเสธ</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function approveRequest(id){
+  const list=getPending();const req=list.find(r=>r.id===id);if(!req)return;
+  const extra=loadExtra();
+  const newId='apr_'+Date.now();
+  if(req.t==='annual')extra.push({name:req.name,t:'annual',s:req.s,e:req.e,id:newId,source:'อนุมัติคำขอลา'});
+  else extra.push({name:req.name,t:'visa',vs:req.s,ve:req.e,id:newId,source:'อนุมัติคำขอลา'});
+  await saveExtra(extra);
+  await savePending(list.filter(r=>r.id!==id));
+  data=buildData();render();updatePendingBadge();renderRequestsList();
+  showToast(`อนุมัติคำขอลาของ ${req.name} แล้ว`);
+}
+async function rejectRequest(id){
+  if(!confirm('ยืนยันปฏิเสธคำขอนี้?'))return;
+  const list=getPending();
+  await savePending(list.filter(r=>r.id!==id));
+  updatePendingBadge();renderRequestsList();
+  showToast('ปฏิเสธคำขอแล้ว');
+}
+
+/* ══════════ HR: MANAGE EMPLOYEES (เพิ่ม/ลบ) ══════════ */
+function openManageEmpModal(){
+  document.getElementById('new-emp-name').value='';
+  document.getElementById('new-emp-err').style.display='none';
+  renderManageEmpList();
+  document.getElementById('modal-emp-bg').classList.add('open');
+}
+function closeManageEmpModal(){document.getElementById('modal-emp-bg').classList.remove('open');}
+function renderManageEmpList(){
+  const list=document.getElementById('emp-list');
+  const sorted=[...activeRoster].sort((a,b)=>a.name.localeCompare(b.name,'th'));
+  document.getElementById('emp-count').textContent=sorted.length;
+  list.innerHTML=sorted.map(r=>`
+    <div class="emp-row">
+      <div><div class="emp-row-name">${r.name}</div><div class="emp-row-meta">${r.dept==='พนักงานสาขา'?'สาขา':'ฝ่ายผลิต'}</div></div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="emp-row-edit" onclick="renameEmployee('${r.name.replace(/'/g,"\\'")}')">✏️ แก้ไข</button>
+        <button class="emp-row-rm" onclick="removeEmployee('${r.name.replace(/'/g,"\\'")}')">ลบ</button>
+      </div>
+    </div>`).join('');
+}
+async function addEmployee(){
+  const nameInput=document.getElementById('new-emp-name');
+  const name=nameInput.value.trim();
+  const dept=document.getElementById('new-emp-dept').value;
+  const err=document.getElementById('new-emp-err');
+  if(!name||activeRosterSet.has(name)){err.style.display='block';return;}
+  err.style.display='none';
+  rosterOverride.added.push({name,dept});
+  rosterOverride.removed=rosterOverride.removed.filter(n=>n!==name); // เผื่อเคยลบชื่อนี้ไปก่อน แล้วเพิ่มกลับมาใหม่
+  await storageSet(ROSTER_KEY,JSON.stringify(rosterOverride));
+  recomputeRoster();
+  nameInput.value='';
+  renderManageEmpList();
+  data=buildData();render();
+  showToast(`เพิ่ม ${name} เข้าระบบแล้ว`);
+}
+async function removeEmployee(name){
+  if(!confirm(`ยืนยันลบ "${name}" ออกจากระบบ? ประวัติวันลาของคนนี้จะไม่แสดงในแดชบอร์ดอีกต่อไป`))return;
+  rosterOverride.added=rosterOverride.added.filter(r=>r.name!==name);
+  if(!rosterOverride.removed.includes(name))rosterOverride.removed.push(name);
+  await storageSet(ROSTER_KEY,JSON.stringify(rosterOverride));
+  recomputeRoster();
+  renderManageEmpList();
+  data=buildData();render();
+  showToast(`ลบ ${name} ออกจากระบบแล้ว`);
+}
+async function renameEmployee(oldName){
+  const input=prompt('แก้ไขชื่อพนักงาน:',oldName);
+  if(input===null)return;
+  const newName=input.trim();
+  if(!newName){alert('กรุณากรอกชื่อ');return;}
+  if(newName===oldName)return;
+  if(activeRosterSet.has(newName)){alert(`มีชื่อ "${newName}" อยู่ในระบบแล้ว ใช้ชื่ออื่นนะคะ`);return;}
+
+  // 1) อัปเดต roster override — ถ้าเป็นพนักงานที่เพิ่มเองผ่านระบบ แก้ชื่อในรายการ added ได้เลย
+  //    ถ้าเป็นพนักงานฐานข้อมูลเดิม ให้ถือว่า "ลบชื่อเดิม + เพิ่มชื่อใหม่" แทน (คงแผนกเดิมไว้)
+  const addedIdx=rosterOverride.added.findIndex(r=>r.name===oldName);
+  if(addedIdx>-1){
+    rosterOverride.added[addedIdx]={...rosterOverride.added[addedIdx],name:newName};
+  } else {
+    const base=roster.find(r=>r.name===oldName);
+    const dept=base?base.dept:'พนักงานสาขา';
+    if(!rosterOverride.removed.includes(oldName))rosterOverride.removed.push(oldName);
+    rosterOverride.added.push({name:newName,dept});
+  }
+  await storageSet(ROSTER_KEY,JSON.stringify(rosterOverride));
+
+  // 2) แก้ชื่อในประวัติการลาทุกรายการที่อ้างถึงคนนี้ (ทั้งชื่อจริงและชื่อเล่นที่ resolve มาเจอ)
+  const extra=loadExtra();
+  let changed=false;
+  extra.forEach(x=>{ if(resolve(x.name)===oldName){x.name=newName;changed=true;} });
+  if(changed)await saveExtra(extra);
+
+  // 3) แก้ชื่อในคำขอลาที่ยังรออนุมัติ (ถ้ามี)
+  const pend=getPending();
+  let pendChanged=false;
+  pend.forEach(x=>{ if(x.name===oldName){x.name=newName;pendChanged=true;} });
+  if(pendChanged)await savePending(pend);
+
+  recomputeRoster();
+  renderManageEmpList();
+  data=buildData();render();updatePendingBadge();
+  showToast(`เปลี่ยนชื่อ "${oldName}" เป็น "${newName}" แล้ว`);
+}
+
+/* ══════════ BOOT ══════════ */
+const HR_PIN='littlebee2026!!'; // รหัสผ่านสำหรับ HR เข้าดูแดชบอร์ด — แก้เลขนี้ในโค้ดได้ตามต้องการ
+let hrPollStarted=false;
+async function unlockHR(){
+  const pin=prompt('รหัสผ่านสำหรับ HR:');
+  if(pin===null)return;
+  if(pin!==HR_PIN){alert('รหัสไม่ถูกต้อง');return;}
+  document.getElementById('req-view').style.display='none';
+  document.getElementById('hr-view').style.display='';
+  await initHRView();
+}
+async function initHRView(){
+  await ensureMigrated();
+  populateYearSelect();
+  document.getElementById('h-year').textContent=currentYear+543;
+  data=buildData();
+  render();
+  updatePendingBadge();
+  if(!hrPollStarted){
+    hrPollStarted=true;
+    const doRefresh=async()=>{
+      await refreshFromStorage();
+      data=buildData();
+      render();
+      updatePendingBadge();
+      if(document.getElementById('modal-requests-bg').classList.contains('open'))renderRequestsList();
+    };
+    // poll shared storage บ่อยๆ ให้ HR เห็นคำขอใหม่ / การอนุมัติจากเครื่องอื่นโดยไม่ต้องรีเฟรชเอง
+    setInterval(doRefresh,6000);
+    // รีเฟรชทันทีเมื่อกลับมาที่แท็บนี้ (สลับแท็บไปแล้วกลับมา)
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')doRefresh();});
+  }
+}
+async function boot(){
+  await refreshFromStorage();
+  // ลิงก์หลักที่ publish ออกมาจะเป็นหน้าขอลาของพนักงานเสมอ (ปลอดภัยสำหรับส่งให้ทุกคน)
+  // HR กดลิงก์ "สำหรับ HR" ด้านล่างฟอร์ม แล้วใส่รหัสผ่านเพื่อสลับเป็นแดชบอร์ด
+  document.getElementById('hr-view').style.display='none';
+  document.getElementById('req-view').style.display='block';
+  let backendOk=false;
+  try{
+    const r=await fetch(`/api/store?key=__healthcheck__`);
+    backendOk=r.ok;
+  }catch(e){backendOk=false;}
+  if(!backendOk&&!window.storage){
+    const banner=document.getElementById('storage-warn-banner');
+    if(banner)banner.style.display='block';
+  }
+  populateRqEmpSelect();
+  rqSelectType('annual');
+}
+boot();
+</script>
+</body>
+</html>
