@@ -1591,6 +1591,7 @@ async function unlockHR(){
   const pin=prompt('รหัสผ่านสำหรับ HR:');
   if(pin===null)return;
   if(pin!==HR_PIN){alert('รหัสไม่ถูกต้อง');return;}
+  sessionStorage.setItem('pbn_hr_unlocked','1');
   document.getElementById('req-view').style.display='none';
   document.getElementById('hr-view').style.display='';
   await initHRView();
@@ -1619,6 +1620,7 @@ async function initHRView(){
 }
 async function boot(){
   await refreshFromStorage();
+  if(sessionStorage.getItem('pbn_hr_unlocked')==='1'){document.getElementById('req-view').style.display='none';document.getElementById('hr-view').style.display='';await initHRView();return;}
   // ลิงก์หลักที่ publish ออกมาจะเป็นหน้าขอลาของพนักงานเสมอ (ปลอดภัยสำหรับส่งให้ทุกคน)
   // HR กดลิงก์ "สำหรับ HR" ด้านล่างฟอร์ม แล้วใส่รหัสผ่านเพื่อสลับเป็นแดชบอร์ด
   document.getElementById('hr-view').style.display='none';
