@@ -3,9 +3,13 @@
 
 import { Redis } from '@upstash/redis';
 
+// automaticDeserialization: false — สำคัญมาก! เว็บฝั่ง client จัดการ JSON.stringify/JSON.parse เอง
+// ถ้าปล่อยให้ library นี้ auto-parse ค่าที่หน้าตาเป็น JSON ให้เอง จะเกิดการ decode ซ้ำซ้อน
+// (ค่าที่ควรเป็น string กลายเป็น object) ทำให้ client เอาไป JSON.parse() ซ้ำแล้ว error เงียบๆ
 const redis = new Redis({
   url: process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN,
+  automaticDeserialization: false,
 });
 
 export default async function handler(req, res) {
