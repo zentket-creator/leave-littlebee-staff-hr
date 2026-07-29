@@ -1,14 +1,5 @@
 // Vercel Serverless Function — ใช้แทน window.storage ของ Claude artifact
 // อ่าน/เขียนค่าแบบ key-value ผ่าน Upstash Redis เพื่อให้ทุกคนที่เปิดเว็บนี้ (พนักงาน + HR) เห็นข้อมูลชุดเดียวกันแบบเรียลไทม์
-//
-// วิธีติดตั้ง (ทำครั้งเดียว):
-// 1. ไปที่ Vercel Dashboard -> โปรเจกต์นี้ -> แท็บ "Storage" -> "Create Database" -> เลือก "Upstash for Redis"
-//    (Marketplace integration — Vercel KV แบบเดิมถูกยกเลิกไปแล้ว ย้ายมาเป็น Upstash Redis แทน)
-// 2. ตั้งชื่อฐานข้อมูล แล้วกด Connect เข้ากับโปรเจกต์นี้ (Vercel จะเติม Environment Variables ให้อัตโนมัติ
-//    คือ KV_REST_API_URL และ KV_REST_API_TOKEN)
-// 3. เพิ่ม dependency "@upstash/redis" ใน package.json ของโปรเจกต์ (ดูไฟล์ package.json ที่แนบมาด้วย)
-// 4. commit + push ไฟล์นี้ (และ package.json) เข้า GitHub repo ที่เชื่อมกับ Vercel -> ระบบจะ auto-deploy ให้เอง
-// 5. ทดสอบโดยเปิดเว็บแล้วลองกดส่งคำขอลาจากอุปกรณ์หนึ่ง แล้วเช็คที่แดชบอร์ด HR จากอีกอุปกรณ์ว่าเห็นคำขอไหม
 
 import { Redis } from '@upstash/redis';
 
@@ -18,12 +9,15 @@ const redis = new Redis({
 });
 
 export default async function handler(req, res) {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   const key = req.query.key;
   if (!key) {
     return res.status(400).json({ error: 'missing key parameter' });
   }
 
-  // ใช้เช็คว่าเชื่อมต่อฐานข้อมูลได้ไหม (เรียกจากหน้าเว็บตอนโหลดหน้าแรก)
   if (key === '__healthcheck__') {
     try {
       await redis.set('__healthcheck__', '1');
@@ -52,4 +46,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: String(e) });
   }
 }
-
